@@ -1,0 +1,56 @@
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tpce-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory /data/sanchez/results/ubik-apps/shore/shore-kits/dskdb/log-tpcc-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Cannot roll back with logging turned off. 
+Cannot roll back with logging turned off. 
+Error: could not open the log directory log-tm1-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tm1-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+Error: could not open the log directory log-tm1-1
+	Note: the log directory is specified using
+	      the sm_logdir option.
+ERROR: cannot open log file: 
+1. error in sdisk_unix.cpp:199 Operating system error  [0x10001] --- Permission denied
+	additional information: Offending file: /data/sanchez/results/ubik-apps/shore/shore-kits/dskdb/log-tpcc-1/log.13
+
+
+ERROR: cannot open log file: 
+1. error in sdisk_unix.cpp:199 Operating system error  [0x10001] --- Permission denied
+	additional information: Offending file: /data/sanchez/results/ubik-apps/shore/shore-kits/dskdb/log-tpcc-1/log.13
+
+
+ERROR: cannot open log file: 
+1. error in sdisk_unix.cpp:199 Operating system error  [0x10001] --- Permission denied
+	additional information: Offending file: /data/sanchez/results/ubik-apps/shore/shore-kits/dskdb/log-tpcc-1/log.13
+
+

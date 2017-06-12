@@ -1,0 +1,465 @@
+diff --git SPECjbb.props SPECjbb.props
+index 644527d..752015d 100644
+--- SPECjbb.props
++++ SPECjbb.props
+@@ -189,7 +189,8 @@ input.suite=SPECjbb
+ input.log_level=INFO
+ 
+ # Deterministic Random Seed (required value is false)
+-input.deterministic_random_seed=false
++#input.deterministic_random_seed=false
++input.deterministic_random_seed=true
+ 
+ # rampup and rampdown specify rampup and rampdown for multi-jvm mode
+ # only. (seconds)
+diff --git SPECjbb_mt.props SPECjbb_mt.props
+new file mode 100644
+index 0000000..9841d0a
+--- /dev/null
++++ SPECjbb_mt.props
+@@ -0,0 +1,218 @@
++#########################################################################
++
++#                                                                       #
++
++#     Control parameters for SPECjbb benchmark                          #
++
++#                                                                       #
++
++#########################################################################
++
++
++
++#
++
++#  This file has 2 sections; changable parameters and fixed parameters.
++
++#  The fixed parameters exist so that you may run tests any way you want,
++
++#  however in order to have a valid, reportable run of SPECjbb, you must
++
++#  reset them to their original values.
++
++#
++
++
++
++#########################################################################
++
++#                                                                       #
++
++#     Changable input parameters                                        #
++
++#                                                                       #
++
++#########################################################################
++
++
++
++# Warehouse sequence may be controlled in either of two ways.  The more
++
++# usual method for specifying warehouse sequence is the triple
++
++# input.starting_number_warehouses, input.increment_number_warehouses,
++
++# and input.ending_number_warehouses, which causes the sequence of
++
++# warehouses to progress from input.starting_number_warehouses to
++
++# input.ending_number_warehouses, incrementing by
++
++# input.increment_number_warehouses.
++
++# The alternative method of specifying warehouse sequence is
++
++# input.sequence_of_number_of_warehouses, which allows specification of
++
++# an arbitrary list of positive integers in increasing order.
++
++
++
++# For a publishable result the warehouse sequence must begin at 1, 
++
++# increment by 1 and go to at least 8 warehouses
++
++# The expected_peak_warehouses defaults to the result of the runtime call
++
++# Runtime.getRuntime.availableProcessors()
++
++# It can be overeridden here but then a submission should include an explanation
++
++# in the Notes field
++
++
++input.jvm_instances=1
++
++#input.starting_number_warehouses=512
++
++#input.increment_number_warehouses=1
++
++#input.ending_number_warehouses=512
++
++#input.ending_number_warehouses=2
++
++#The default value for input.expected_peak_warehouse
++#is Runtime.getRuntime.availableProcessors
++#If you modify this property, the result must be submitted for review before publication
++#and an explanation should be included in the Notes section.  See the run rules for details.
++input.expected_peak_warehouse=4
++
++
++#input.sequence_of_number_of_warehouses=1 2 3 4 5 6 7 8
++
++#input.sequence_of_number_of_warehouses=16
++input.sequence_of_number_of_warehouses=4
++
++#
++
++# 'show_warehouse_detail' controls whether to print per-warehouse
++
++# statistics in the raw results file. These statistics are not used
++
++# in the final report but may be useful when analyzing a JVMs behavior.
++
++# When running a large number of warehouses (i.e. on a system with a
++
++# lot of CPUs), changing this to true will results in very large
++
++# raw files. For submissions to SPEC, it is recommended that this 
++
++# attribute be set to false.
++
++#
++
++
++
++input.show_warehouse_detail=false
++
++
++
++#
++
++# 'include_file' is the name for the descriptive properties file. On
++
++# systems where the file separator is \, use \\ as the file separator
++
++# here.
++
++# 
++
++# Examples:
++
++#        input.include_file=SPECjbb_config.props
++
++#        input.include_file=/path/to/SPECjbb_config.props
++
++#        input.include_file=c:\\path\\to\\SPECjbb_config.props
++
++#
++
++
++
++input.include_file=SPECjbb_config.props
++
++
++
++#
++
++# directory to store output files. On systems where the file separator 
++
++# is \, use \\ as the file separator here.
++
++# 
++
++# Examples:
++
++#        input.include_file=results
++
++#        input.include_file=/path/to/results
++
++#        input.include_file=c:\\path\\to\\results
++
++#
++
++input.output_directory=results
++
++
++
++#########################################################################
++
++#                                                                       #
++
++#     Fixed input parameters                                            #
++
++#                                                                       #
++
++#     YOUR RESULTS WILL BE INVALID IF YOU CHANGE THESE PARAMETERS       #
++
++#                                                                       #
++
++#########################################################################
++
++
++
++# DON'T CHANGE THIS PARAMETER, OR ELSE !!!!
++
++input.suite=SPECjbb
++
++# Benchmark logging level
++
++input.log_level=INFO
++
++# Deterministic Random Seed (required value is false)
++#input.deterministic_random_seed=false
++input.deterministic_random_seed=true
++
++# rampup and rampdown specify rampup and rampdown for multi-jvm mode
++# only. (seconds)
++input.per_jvm_warehouse_rampup=3
++input.per_jvm_warehouse_rampdown=20
++
++#
++# If you need to collect stats or profiles, it may be useful to increase
++
++# the 'measurement_seconds'.  This will, however, invalidate your results
++
++#
++
++# Amount of time to run each point prior to the measurement window
++
++
++input.ramp_up_seconds=10
++
++# Time of measurement window
++# Run for a REALLY LONG time; the tailbench harness must stop the simulation
++# at the end of the measurement phase
++input.measurement_seconds=1000000000
++
++
+diff --git build.sh build.sh
+new file mode 100755
+index 0000000..0017d16
+--- /dev/null
++++ build.sh
+@@ -0,0 +1,22 @@
++#!/bin/bash
++
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
++source ${DIR}/../configs.sh
++
++TBENCH_PATH=../harness
++
++# Compile client module
++g++ -std=c++11 -g -O3 -fPIC -I${TBENCH_PATH} -c client.cpp -o client.o
++g++ -std=c++11 -g -O3 client.o ${TBENCH_PATH}/client.o \
++    ${TBENCH_PATH}/tbench_client_networked.o -o client -lrt -pthread
++
++# Create jni shared lib
++g++ -std=c++11 -g -O3 -shared -fPIC -o libtbench_integrated_jni.so \
++    ${TBENCH_PATH}/tbench_jni.o ${TBENCH_PATH}/client.o \
++    ${TBENCH_PATH}/tbench_server_integrated.o client.o
++
++g++ -std=c++11 -g -O3 -shared -fPIC -o libtbench_networked_jni.so \
++    ${TBENCH_PATH}/tbench_jni.o ${TBENCH_PATH}/client.o \
++    ${TBENCH_PATH}/tbench_server_networked.o
++
++env PATH=${JDK_PATH}/bin/:${PATH} CLASSPATH=${TBENCH_PATH}/tbench.jar ant
+diff --git clean.sh clean.sh
+new file mode 100755
+index 0000000..a4f2169
+--- /dev/null
++++ clean.sh
+@@ -0,0 +1,3 @@
++#!/bin/bash
++
++ant clean
+diff --git client.cpp client.cpp
+new file mode 100644
+index 0000000..ad7967a
+--- /dev/null
++++ client.cpp
+@@ -0,0 +1,15 @@
++#include "tbench_client.h"
++
++#include <string.h>
++
++#include <string>
++
++void tBenchClientInit() { }
++
++size_t tBenchClientGenReq(void* data) {
++    std::string str = "Dummy Req";
++    size_t len = str.size() + 1;
++    memcpy(data, reinterpret_cast<const void*>(str.c_str()), len);
++
++    return len;
++}
+diff --git run.sh run.sh
+index 2ca487e..132a558 100755
+--- run.sh
++++ run.sh
+@@ -1,12 +1,33 @@
+-##
+-## This is an example of what a run sh script might look like
+-##
++#!/bin/bash
+ 
+-date
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
++source ${DIR}/../configs.sh
+ 
+-java -fullversion
++# Setup commands
++mkdir -p results
+ 
+-java -cp jbb.jar:check.jar -Xms256m -Xmx256m spec.jbb.JBBmain -propfile SPECjbb.props -id $x > multi.$x &
++# Run specjbb
++TBENCH_PATH=../harness
+ 
+-date
++export LD_LIBRARY_PATH=${TBENCH_PATH}:${LD_LIBRARY_PATH}
++
++export CLASSPATH=./build/dist/jbb.jar:./build/dist/check.jar:${TBENCH_PATH}/tbench.jar
++
++export PATH=${JDK_PATH}/bin:${PATH}
++export TBENCH_QPS=100 
++export TBENCH_MAXREQS=100 
++export TBENCH_WARMUPREQS=10 
++export TBENCH_MINSLEEPNS=100000
++
++if [[ -d libtbench_jni.so ]] 
++then
++    rm libtbench_jni.so
++fi
++ln -sf ./libtbench_integrated_jni.so libtbench_jni.so
++
++${JDK_PATH}/bin/java -Djava.library.path=. -XX:ParallelGCThreads=1 -XX:+UseSerialGC -XX:NewRatio=1 -XX:NewSize=7000m -Xloggc:gc.log -Xms10000m -Xmx10000m -Xrs spec.jbb.JBBmain -propfile SPECjbb_mt.props
++
++# Teardown
++rm libtbench_jni.so
++rm gc.log
+ 
+diff --git run_networked.sh run_networked.sh
+new file mode 100755
+index 0000000..7562f83
+--- /dev/null
++++ run_networked.sh
+@@ -0,0 +1,45 @@
++#!/bin/bash
++
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
++source ${DIR}/../configs.sh
++
++# Setup commands
++mkdir -p results
++
++# Run specjbb
++TBENCH_PATH=../harness
++
++export LD_LIBRARY_PATH=${TBENCH_PATH}:${LD_LIBRARY_PATH}
++
++export CLASSPATH=./build/dist/jbb.jar:./build/dist/check.jar:${TBENCH_PATH}/tbench.jar
++
++export PATH=${JDK_PATH}/bin:${PATH}
++export TBENCH_QPS=100 
++export TBENCH_MAXREQS=100 
++export TBENCH_WARMUPREQS=10 
++export TBENCH_MINSLEEPNS=100000
++
++if [[ -d libtbench_jni.so ]] 
++then
++    rm libtbench_jni.so
++fi
++ln -sf libtbench_networked_jni.so libtbench_jni.so
++
++${JDK_PATH}/bin/java -Djava.library.path=. -XX:ParallelGCThreads=1 -XX:+UseSerialGC -XX:NewRatio=1 -XX:NewSize=7000m -Xloggc:gc.log -Xms10000m -Xmx10000m -Xrs spec.jbb.JBBmain -propfile SPECjbb_mt.props &
++
++echo $! > server.pid
++
++sleep 5
++
++./client &
++echo $! > client.pid
++
++wait $(cat client.pid)
++
++# Teardown
++kill -9 $(cat server.pid)
++kill -9 $(cat client.pid)
++rm server.pid client.pid
++rm libtbench_jni.so
++rm gc.log
++
+diff --git src/spec/jbb/JBBmain.java src/spec/jbb/JBBmain.java
+index 1be1bea..d932d1e 100644
+--- src/spec/jbb/JBBmain.java
++++ src/spec/jbb/JBBmain.java
+@@ -21,6 +21,8 @@ import java.text.DateFormat;
+ import spec.reporter.*;
+ import java.net.Socket;
+ 
++import tbench.*;
++
+ public class JBBmain implements Runnable {
+     // This goes right after each class/interface statement
+     static final String          COPYRIGHT             = "SPECjbb2005,"
+@@ -173,6 +175,7 @@ public class JBBmain implements Runnable {
+         System.out.println("Start User Threads");
+         JBButil.getLog().info("Start User Threads");
+         myCompany.prepareForStart();
++        tbench.tBenchServerInit(number_of_warehouses);
+         try {
+             for (whID = 1; whID <= number_of_warehouses; whID++) {
+                 myCompany.startAutomated(whID, rampup_time, measurement_time);
+@@ -223,6 +226,7 @@ public class JBBmain implements Runnable {
+         JBButil.getLog().exiting("spec.jbb.JBBmain", "DoARun");
+         // Push all of the logged messages out after each run
+         flushLog();
++        tbench.tBenchServerFinish();
+     }
+ 
+     public boolean DoAValidationRun(Company myCompany) {
+diff --git src/spec/jbb/TransactionManager.java src/spec/jbb/TransactionManager.java
+index 5d6c6b3..4d9d67a 100644
+--- src/spec/jbb/TransactionManager.java
++++ src/spec/jbb/TransactionManager.java
+@@ -9,6 +9,8 @@ package spec.jbb;
+ import java.io.*;
+ import java.util.logging.Level;
+ 
++import tbench.*;
++
+ class TransactionManager {
+     // This goes right after each class/interface statement
+     static final String       COPYRIGHT       = "SPECjbb2005,"
+@@ -215,6 +217,8 @@ class TransactionManager {
+                             + warehouseId);
+         }
+ 
++        tbench.tBenchServerThreadStart();
++
+         while (this.getrunMode() != Company.runModes.STOP) {
+             if ((!timed)
+                     && (this.getrunMode() == Company.runModes.DEFAULT_MODE)) {
+@@ -230,7 +234,13 @@ class TransactionManager {
+                 }
+             }
+ 
++            byte[] req = tbench.tBenchRecvReq();
++
+             txntime = goManual(txntype, myTimerData);
++
++            byte[] resp = new byte[32];
++            tbench.tBenchSendResp(resp, resp.length);
++
+             if (this.getrunMode() == Company.runModes.RECORDING)
+                 myTimerData.updateTimerData(txntype, txntime);
+             if (timed) {
+@@ -282,6 +292,7 @@ class TransactionManager {
+                 company.stopThreadsCountMonitor.notify();
+             }
+         }
++
+     }
+ 
+     public boolean goValidate() {
