@@ -1,0 +1,68 @@
+/bin/rm -f config/shore-config.h
+aclocal --force ...
+autoheader --force ...
+autoconf --force ...
+automake -a --include-deps ...
+------------------------------------------------------------
+
+Run
+./configure
+
+./configure --help
+to see the options
+
+Example configurations:
+For use with valgrind and to override CXX shell variable:
+./configure CXX=/usr/bin/g++ --enable-valgrind
+For maximum debugging and tracing :
+./configure --with-debug-level3 --enable-checkrc --enable-trace
+For lots of debugging and tracing :
+./configure --with-debug-level2 --enable-trace
+For debugging and no tracing :
+./configure --with-debug-level1
+
+For SOLARIS, we suggest that you use --enable-dependendency-tracking and CC:
+./configure CXX=CC --enable-dependency-tracking
+For no debugging and no tracing :
+./configure
+
+After you configure, run
+make
+
+then, optionally,
+make check
+
+------------------------------------------------------------
+------------------------------------------------------------
+
+Run
+./configure [CONFIGURATIONS] [COMPILATION] SHORE_HOME=shore-dir [READLINE_HOME=readline-dir]
+
+./configure --help
+to see the options
+
+Supported configuration options
+--enable-shore6 - If compiling against shore-sm-6.X.X
+--enable-dora - Includes DORA files, defines CFG_DORA
+--enable-flusher - Defines CFG_FLUSHER
+--enable-qpipe - Includes QPipe files, defines CFG_QPIPE
+--enable-bt - Enables backtracing facility. defines CFG_BT
+--enable-simics - Adds the simics MAGIC instructions. defines CFG_SIMICS
+--enable-hack - Enables physical design haks. Padding padding TPC-B tables, and partitioning indexes, such as OL_IDX
+
+
+There are 3 supported compilation options
+--enable-debug - Compile for debugging, e.g., -g
+--enable-profile - Compile for profiling, e.g., -pg for oprofile
+--enable-dbgsymbols - Compile with debug symbols, e.g., -ggdb
+
+If none of them is enabled then the default compilation will be with
+the maximum optimizations possible, e.g., -O3 or -xO4
+
+For SOLARIS, we suggest that you use --enable-dependendency-tracking and CC
+./configure CXX=CC --enable-dependency-tracking
+
+After you configure, run
+make
+
+------------------------------------------------------------

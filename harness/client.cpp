@@ -41,7 +41,7 @@
  * Client
  *******************************************************************************/
 
-Client::Client(int _nthreads) {
+Client::Client(int _nthreads) : dqpsLookup("input.test") {
     status = INIT;
 
     nthreads = _nthreads;
@@ -74,13 +74,25 @@ Request* Client::startReq() {
             pthread_barrier_destroy(&barrier);
             pthread_barrier_init(&barrier, nullptr, nthreads);
         }
-
+        dqpsLookup.setStartingNs();
         pthread_mutex_unlock(&lock);
-
         pthread_barrier_wait(&barrier);
     }
 
     pthread_mutex_lock(&lock);
+
+    double newQPS = dqpsLookup.currentQPS();
+    if(newQPS > 0)
+    {
+        double newLambda = newQPS * 1e-9;
+        if(newLambda != lambda)
+        {
+            lambda = newLambda;
+            delete dist;
+            uint64_t curNs = getCurNs();
+            dist = new ExpDist(lambda,seed,curNs);
+        }
+    }
 
     Request* req = new Request();
     size_t len = tBenchClientGenReq(&req->data);

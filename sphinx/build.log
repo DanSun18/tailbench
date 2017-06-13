@@ -1,0 +1,4 @@
+g++ -DMODELDIR=\"`pkg-config --variable=modeldir pocketsphinx`\" `pkg-config --cflags --libs pocketsphinx sphinxbase` -I../harness -g -O3 -std=c++0x   -c -o ../harness/client.o ../harness/client.cpp
+export PKG_CONFIG_PATH=/home/dan/Desktop/tailbench/tailbench/sphinx/sphinx-install/lib/pkgconfig && \
+g++ `pkg-config --cflags pocketsphinx sphinxbase` decoder.cpp -c -o decoder.o -DMODELDIR=\"`pkg-config --variable=modeldir pocketsphinx`\" `pkg-config --cflags --libs pocketsphinx sphinxbase` -I../harness -g -O3 -std=c++0x
+Makefile:25: recipe for target 'decoder.o' failed

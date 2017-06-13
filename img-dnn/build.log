@@ -1,0 +1,6 @@
+g++ -g -O3  -std=c++0x -I../harness img-dnn.cpp -c -o img-dnn.o
+g++ -g -O3  -std=c++0x -I../harness common.cpp -c -o common.o
+g++ -g -O3  -std=c++0x -I../harness client.cpp -c -o client.o
+Makefile:25: recipe for target 'img-dnn.o' failed
+Makefile:28: recipe for target 'client.o' failed
+Makefile:19: recipe for target 'common.o' failed

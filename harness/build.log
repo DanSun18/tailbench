@@ -1,0 +1,2 @@
+/bin/javac tbench/tbench.java
+Makefile:27: recipe for target 'tbench/tbench.class' failed

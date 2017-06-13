@@ -1,0 +1,2 @@
+Failed to run bash -c "g++  -dM -x c++ -E /dev/null -include boost/version.hpp 2>/dev/null |grep '#define BOOST_'"
+Boost does not seem to be installed or g++ is confused.
