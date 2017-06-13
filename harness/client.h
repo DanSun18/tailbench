@@ -27,9 +27,43 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
- #include "dynamic_qps_lookup.h"
+#include "dynamic_qps_lookup.h"
+
+
+#include <stdlib.h>
+#include <inttypes.h>
+//#include <stdint.h>
+#include <queue>
+//#include <string>
 
 enum ClientStatus { INIT, WARMUP, ROI, FINISHED };
+
+
+
+
+class QPScombo{
+    private:
+        uint64_t duration;
+        double QPS;
+    public:
+        QPScombo(uint64_t dur, double _QPS){
+            duration = dur;
+            QPS = _QPS;
+        }
+        double getQPS(){return QPS;}
+        uint64_t getDuration(){return duration;}
+};
+
+class DQPSLookup{
+    private:
+        std::queue<QPScombo*> QPStiming;
+        uint64_t startingNs; //starting time of the current QPS period
+        bool started;
+    public:
+        DQPSLookup(std::string inputFile);
+        double currentQPS();
+        void setStartingNs();
+};
 
 class Client {
     protected:
