@@ -62,7 +62,7 @@ void* recv(void* c) {
         } else if (resp.type == ROI_BEGIN) {
             client->startRoi();
         } else if (resp.type == FINISH) {
-            client->dumpStats();
+            client->dumpAllStats();
             syscall(SYS_exit_group, 0);
         } else {
             std::cerr << "Unknown response type: " << resp.type << std::endl;

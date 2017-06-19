@@ -99,6 +99,7 @@ Client::Client(int _nthreads) : dqpsLookup("input.test") {
     minSleepNs = getOpt("TBENCH_MINSLEEPNS", 0);
     seed = getOpt("TBENCH_RANDSEED", 0);
     lambda = getOpt<double>("TBENCH_QPS", 1000.0) * 1e-9;
+    QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
 
     dist = nullptr; // Will get initialized in startReq()
 
@@ -114,6 +115,7 @@ Request* Client::startReq() {
         pthread_mutex_lock(&lock);
 
         if (!dist) {
+
             uint64_t curNs = getCurNs();
             dist = new ExpDist(lambda, seed, curNs);
 
@@ -132,6 +134,14 @@ Request* Client::startReq() {
     double newQPS = dqpsLookup.currentQPS();
     if(newQPS > 0)
     {
+    	QPSSequence.push(newQPS);
+    	_sjrnTimes.push(sjrnTimes);
+    	_svcTimes.push(svcTimes);
+    	_queueTimes.push(queueTimes);
+    	sjrnTimes.clear();
+    	svcTimes.clear();
+    	queueTimes.clear();
+
         double newLambda = newQPS * 1e-9;
         if(newLambda != lambda)
         {
@@ -220,6 +230,35 @@ void Client::dumpStats() {
         out<<sjrnTimes[r];
         out<<'\n';
     }
+    out.close();
+}
+
+void Client::dumpAllStats() {
+	std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
+	int intervals = QPSSequence.size();
+	for(int i = 0; i < intervals; i++)
+	{
+		out << "QPS = " << QPSSequence.front() << '\n';
+		QPSSequence.pop();
+    	int reqs = _sjrnTimes.front().size();
+    	for (int r = 0; r < reqs; ++r) {
+	       // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
+	       //             sizeof(queueTimes[r]));
+	       // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
+	        //            sizeof(svcTimes[r]));
+	       // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
+	       //             sizeof(sjrnTimes[r]));	
+		out<<(_queueTimes.front())[r];
+		out<<' ';
+		out<<(_svcTimes.front())[r];
+	        out<<' ';
+	        out<<(_sjrnTimes.front())[r];
+	        out<<'\n';
+   		}
+   		_queueTimes.pop();
+   		_svcTimes.pop();
+   		_sjrnTimes.pop();
+	}
     out.close();
 }
 
