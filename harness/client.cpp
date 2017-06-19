@@ -48,6 +48,7 @@
  *******************************************************************************/
 
 DQPSLookup::DQPSLookup(std::string inputFile){
+    std::cout << "TESTING: " << "input file is " << inputFile.c_str() << '\n';
     started = false;
     std::ifstream infile(inputFile.c_str());
     //take input
@@ -56,6 +57,7 @@ DQPSLookup::DQPSLookup(std::string inputFile){
     while(infile >> duration >> QPS)
     {
         QPStiming.push(new QPScombo(duration, QPS));
+        std::cout << "TESTING: " << "pushed combo " << duration << ' ' << QPS <<'\n';  
     }
     startingNs = getCurNs();
 }
@@ -134,17 +136,21 @@ Request* Client::startReq() {
     double newQPS = dqpsLookup.currentQPS();
     if(newQPS > 0)
     {
-    	QPSSequence.push(newQPS);
-    	_sjrnTimes.push(sjrnTimes);
-    	_svcTimes.push(svcTimes);
-    	_queueTimes.push(queueTimes);
-    	sjrnTimes.clear();
-    	svcTimes.clear();
-    	queueTimes.clear();
-
+        
         double newLambda = newQPS * 1e-9;
         if(newLambda != lambda)
         {
+            std::cout << "TESTING: " << "newQPS is" << newQPS << '\n';
+            if(!sjrnTimes.empty())
+            {
+                QPSSequence.push(newQPS);
+                _sjrnTimes.push(sjrnTimes);
+                _svcTimes.push(svcTimes);
+                _queueTimes.push(queueTimes);
+                sjrnTimes.clear();
+                svcTimes.clear();
+                queueTimes.clear();
+            }
             lambda = newLambda;
             delete dist;
             uint64_t curNs = getCurNs();
@@ -234,8 +240,10 @@ void Client::dumpStats() {
 }
 
 void Client::dumpAllStats() {
-	std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
+    std::cout << "TESTING: " << "dumping all stats" << '\n';
 	int intervals = QPSSequence.size();
+    std::cout << "TESTING: " << intervals << " QPS intervals are detected\n";
+    std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
 	for(int i = 0; i < intervals; i++)
 	{
 		out << "QPS = " << QPSSequence.front() << '\n';
