@@ -76,6 +76,7 @@ class Client {
         uint64_t minSleepNs;
         uint64_t seed;
         double lambda;
+        double current_qps;
         ExpDist* dist;
 
         uint64_t startedReqs;

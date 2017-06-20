@@ -100,8 +100,10 @@ Client::Client(int _nthreads) : dqpsLookup("input.test") {
     
     minSleepNs = getOpt("TBENCH_MINSLEEPNS", 0);
     seed = getOpt("TBENCH_RANDSEED", 0);
-    lambda = getOpt<double>("TBENCH_QPS", 1000.0) * 1e-9;
-    QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
+    current_qps = getOpt<double>("TBENCH_QPS", 1000.0);
+    lambda = current_qps * 1e-9;
+    
+    //QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
 
     dist = nullptr; // Will get initialized in startReq()
 
@@ -122,41 +124,41 @@ Request* Client::startReq() {
             dist = new ExpDist(lambda, seed, curNs);
 
             status = WARMUP;
-
             pthread_barrier_destroy(&barrier);
             pthread_barrier_init(&barrier, nullptr, nthreads);
         }
-        dqpsLookup.setStartingNs();
+        //dqpsLookup.setStartingNs();
         pthread_mutex_unlock(&lock);
         pthread_barrier_wait(&barrier);
     }
 
     pthread_mutex_lock(&lock);
 
-    double newQPS = dqpsLookup.currentQPS();
-    if(newQPS > 0)
+    if(status == ROI)
     {
-        
-        double newLambda = newQPS * 1e-9;
-        if(newLambda != lambda)
+        double newQPS = dqpsLookup.currentQPS();
+        if(newQPS > 0 && current_qps!= newQPS)
         {
-            std::cout << "TESTING: " << "newQPS is" << newQPS << '\n';
+            std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
             if(!sjrnTimes.empty())
             {
-                QPSSequence.push(newQPS);
+                QPSSequence.push(current_qps);
                 _sjrnTimes.push(sjrnTimes);
                 _svcTimes.push(svcTimes);
                 _queueTimes.push(queueTimes);
                 sjrnTimes.clear();
                 svcTimes.clear();
                 queueTimes.clear();
+                std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
             }
-            lambda = newLambda;
+            current_qps = newQPS;
+            lambda = current_qps * 1e-9;
             delete dist;
             uint64_t curNs = getCurNs();
             dist = new ExpDist(lambda,seed,curNs);
         }
     }
+    
 
     Request* req = new Request();
     size_t len = tBenchClientGenReq(&req->data);
@@ -165,7 +167,7 @@ Request* Client::startReq() {
     req->id = startedReqs++;
     req->genNs = dist->nextArrivalNs();
     inFlightReqs[req->id] = req;
-
+    std::cout << "TESTING: " << "request id " << req->id << " is generated \n";
     pthread_mutex_unlock(&lock);
 
     uint64_t curNs = getCurNs();
@@ -179,7 +181,7 @@ Request* Client::startReq() {
 
 void Client::finiReq(Response* resp) {
     pthread_mutex_lock(&lock);
-
+    std::cout << "TESTING: " << "finiReq receiving response for id " << resp->id << '\n';
     auto it = inFlightReqs.find(resp->id);
     assert(it != inFlightReqs.end());
     Request* req = it->second;
@@ -196,6 +198,7 @@ void Client::finiReq(Response* resp) {
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
+        std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
     delete req;
@@ -205,8 +208,9 @@ void Client::finiReq(Response* resp) {
 
 void Client::_startRoi() {
     assert(status == WARMUP);
-    status = ROI;
 
+    status = ROI;
+    dqpsLookup.setStartingNs();
     queueTimes.clear();
     svcTimes.clear();
     sjrnTimes.clear();
@@ -214,6 +218,7 @@ void Client::_startRoi() {
 
 void Client::startRoi() {
     pthread_mutex_lock(&lock);
+    std::cout << "TESTING: " << "startingRoi" << '\n';
     _startRoi();
     pthread_mutex_unlock(&lock);
 }
@@ -244,7 +249,7 @@ void Client::dumpAllStats() {
 	int intervals = QPSSequence.size();
     std::cout << "TESTING: " << intervals << " QPS intervals are detected\n";
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
-	for(int i = 0; i < intervals; i++)
+	for(int i = 0; i < intervals - 1; i++)
 	{
 		out << "QPS = " << QPSSequence.front() << '\n';
 		QPSSequence.pop();
@@ -267,6 +272,24 @@ void Client::dumpAllStats() {
    		_svcTimes.pop();
    		_sjrnTimes.pop();
 	}
+    //dumping the last QPS interval without putting it into the queue
+    out << "QPS = " << QPSSequence.front() << '\n';
+    QPSSequence.pop();
+    int reqs = sjrnTimes.size();
+    for (int r = 0; r < reqs; ++r) {
+           // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
+           //             sizeof(queueTimes[r]));
+           // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
+            //            sizeof(svcTimes[r]));
+           // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
+           //             sizeof(sjrnTimes[r]));    
+        out<< queueTimes[r];
+        out<<' ';
+        out<< svcTimes[r];
+        out<<' ';
+        out<<sjrnTimes[r];
+        out<<'\n';
+    }
     out.close();
 }
 
