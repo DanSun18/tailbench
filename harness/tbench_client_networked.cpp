@@ -76,11 +76,11 @@ int main(int argc, char* argv[]) {
     std::string server = getOpt<std::string>("TBENCH_SERVER", "");
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 8080);
 
-    std::cout << "TESTING: " << "finished parsing parameters\n";
+    //std::cout << "TESTING: " << "finished parsing parameters\n";
 
     NetworkedClient* client = new NetworkedClient(nthreads, server, serverport);
 
-    std::cout << "TESTING: " << "NetworkedClient initiated\n";
+    //std::cout << "TESTING: " << "NetworkedClient initiated\n";
 
     std::vector<pthread_t> senders(nthreads);
     std::vector<pthread_t> receivers(nthreads);

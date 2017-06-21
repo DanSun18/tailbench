@@ -48,7 +48,7 @@
  *******************************************************************************/
 
 DQPSLookup::DQPSLookup(std::string inputFile){
-    std::cout << "TESTING: " << "input file is " << inputFile.c_str() << '\n';
+    //std::cout << "TESTING: " << "input file is " << inputFile.c_str() << '\n';
     started = false;
     std::ifstream infile(inputFile.c_str());
     //take input
@@ -57,7 +57,11 @@ DQPSLookup::DQPSLookup(std::string inputFile){
     while(infile >> duration >> QPS)
     {
         QPStiming.push(new QPScombo(duration, QPS));
-        std::cout << "TESTING: " << "pushed combo " << duration << ' ' << QPS <<'\n';  
+        //std::cout << "TESTING: " << "pushed combo " << duration << ' ' << QPS <<'\n';  
+    }
+    if(QPStiming.empty())
+    {
+        std::cerr << "No input for QPS is read\n";
     }
     startingNs = getCurNs();
 }
@@ -139,7 +143,7 @@ Request* Client::startReq() {
         double newQPS = dqpsLookup.currentQPS();
         if(newQPS > 0 && current_qps!= newQPS)
         {
-            std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
+            //std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
             if(!sjrnTimes.empty())
             {
                 QPSSequence.push(current_qps);
@@ -149,7 +153,7 @@ Request* Client::startReq() {
                 sjrnTimes.clear();
                 svcTimes.clear();
                 queueTimes.clear();
-                std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
+                //std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
             }
             current_qps = newQPS;
             lambda = current_qps * 1e-9;
@@ -167,7 +171,7 @@ Request* Client::startReq() {
     req->id = startedReqs++;
     req->genNs = dist->nextArrivalNs();
     inFlightReqs[req->id] = req;
-    std::cout << "TESTING: " << "request id " << req->id << " is generated \n";
+    //std::cout << "TESTING: " << "request id " << req->id << " is generated \n";
     pthread_mutex_unlock(&lock);
 
     uint64_t curNs = getCurNs();
@@ -181,7 +185,7 @@ Request* Client::startReq() {
 
 void Client::finiReq(Response* resp) {
     pthread_mutex_lock(&lock);
-    std::cout << "TESTING: " << "finiReq receiving response for id " << resp->id << '\n';
+    //std::cout << "TESTING: " << "finiReq receiving response for id " << resp->id << '\n';
     auto it = inFlightReqs.find(resp->id);
     assert(it != inFlightReqs.end());
     Request* req = it->second;
@@ -198,7 +202,7 @@ void Client::finiReq(Response* resp) {
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
-        std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
+        //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
     delete req;
@@ -218,7 +222,7 @@ void Client::_startRoi() {
 
 void Client::startRoi() {
     pthread_mutex_lock(&lock);
-    std::cout << "TESTING: " << "startingRoi" << '\n';
+    //std::cout << "TESTING: " << "startingRoi" << '\n';
     _startRoi();
     pthread_mutex_unlock(&lock);
 }
@@ -245,9 +249,9 @@ void Client::dumpStats() {
 }
 
 void Client::dumpAllStats() {
-    std::cout << "TESTING: " << "dumping all stats" << '\n';
+    //std::cout << "TESTING: " << "dumping all stats" << '\n';
 	int intervals = QPSSequence.size();
-    std::cout << "TESTING: " << intervals << " QPS intervals are detected\n";
+    //std::cout << "TESTING: " << intervals << " QPS intervals are detected\n";
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
 	for(int i = 0; i < intervals - 1; i++)
 	{
