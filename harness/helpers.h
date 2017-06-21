@@ -28,7 +28,7 @@
 template<typename T>
 static T getOpt(const char* name, T defVal) {
 
-    std::cout << "TESTING: " << "getting option" << name << '\n';
+    //std::cout << "TESTING: " << "getting option" << name << '\n';
     const char* opt = getenv(name);
     if (!opt) return defVal;
     std::cout << name << " = " << opt << std::endl;
