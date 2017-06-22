@@ -143,7 +143,7 @@ Request* Client::startReq() {
         double newQPS = dqpsLookup.currentQPS();
         if(newQPS > 0 && current_qps!= newQPS)
         {
-            //std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
+            std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
             if(!sjrnTimes.empty())
             {
                 QPSSequence.push(current_qps);
@@ -153,7 +153,7 @@ Request* Client::startReq() {
                 sjrnTimes.clear();
                 svcTimes.clear();
                 queueTimes.clear();
-                //std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
+                std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
             }
             current_qps = newQPS;
             lambda = current_qps * 1e-9;
@@ -222,7 +222,7 @@ void Client::_startRoi() {
 
 void Client::startRoi() {
     pthread_mutex_lock(&lock);
-    //std::cout << "TESTING: " << "startingRoi" << '\n';
+    std::cout << "TESTING: " << "startingRoi" << '\n';
     _startRoi();
     pthread_mutex_unlock(&lock);
 }
@@ -249,11 +249,11 @@ void Client::dumpStats() {
 }
 
 void Client::dumpAllStats() {
-    //std::cout << "TESTING: " << "dumping all stats" << '\n';
+    std::cout << "TESTING: " << "dumping all stats" << '\n';
 	int intervals = QPSSequence.size();
-    //std::cout << "TESTING: " << intervals << " QPS intervals are detected\n";
+    std::cout << "TESTING: " << intervals << " QPS intervals are detected\n";
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
-	for(int i = 0; i < intervals - 1; i++)
+	for(int i = 0; i < intervals ; i++)
 	{
 		out << "QPS = " << QPSSequence.front() << '\n';
 		QPSSequence.pop();
@@ -277,7 +277,7 @@ void Client::dumpAllStats() {
    		_sjrnTimes.pop();
 	}
     //dumping the last QPS interval without putting it into the queue
-    out << "QPS = " << QPSSequence.front() << '\n';
+    out << "QPS = " << current_qps << '\n';
     QPSSequence.pop();
     int reqs = sjrnTimes.size();
     for (int r = 0; r < reqs; ++r) {
