@@ -299,6 +299,7 @@ public:
 
   //! return static instance for use like global variable
   static const StaticData& Instance() {
+    std::cout << "TESTING: StaticData::Instace() is called\n";
     return s_instance;
   }
 
@@ -418,6 +419,7 @@ public:
     }
   }
   size_t GetVerboseLevel() const {
+    std::cout << "TESTING: getVerboseLevel returns" << m_verboseLevel << '\n';
     return m_verboseLevel;
   }
   void SetVerboseLevel(int x) const {

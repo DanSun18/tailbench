@@ -547,17 +547,12 @@ void OutputFeatureWeightsForHypergraph(std::ostream &outputSearchGraphStream)
 int main(int argc, char** argv)
 {
   try {
-  
+  std::cout << "TESTING: entered main of Main.cpp\n";
 #ifdef HAVE_PROTOBUF
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 #endif
 
-    // echo command line, if verbose
-    IFVERBOSE(1) {
-      TRACE_ERR("command: ");
-      for(int i=0; i<argc; ++i) TRACE_ERR(argv[i]<<" ");
-      TRACE_ERR(endl);
-    }
+
 
     // set number of significant decimals in output
     fix(cout,PRECISION);
@@ -575,6 +570,15 @@ int main(int argc, char** argv)
     // note: this also loads models such as the language model, etc.
     if (!StaticData::LoadDataStatic(&params, argv[0])) {
       exit(1);
+    }
+
+     // echo command line, if verbose
+    //TODO this is currently now working, probably should be moved after Loading
+    std::cout << "TESTING: echo command line, if verbose\n";
+    IFVERBOSE(1) {
+      TRACE_ERR("command: ");
+      for(int i=0; i<argc; ++i) TRACE_ERR(argv[i]<<" ");
+      TRACE_ERR(endl);
     }
 
     // setting "-show-weights" -> just dump out weights and exit
