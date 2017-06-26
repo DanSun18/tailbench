@@ -547,7 +547,7 @@ void OutputFeatureWeightsForHypergraph(std::ostream &outputSearchGraphStream)
 int main(int argc, char** argv)
 {
   try {
-  std::cout << "TESTING: entered main of Main.cpp\n";
+  // std::cout << "TESTING: entered main of Main.cpp\n";
 #ifdef HAVE_PROTOBUF
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 #endif
@@ -574,7 +574,7 @@ int main(int argc, char** argv)
 
      // echo command line, if verbose
     //TODO this is currently now working, probably should be moved after Loading
-    std::cout << "TESTING: echo command line, if verbose\n";
+    // std::cout << "TESTING: echo command line, if verbose\n";
     IFVERBOSE(1) {
       TRACE_ERR("command: ");
       for(int i=0; i<argc; ++i) TRACE_ERR(argv[i]<<" ");

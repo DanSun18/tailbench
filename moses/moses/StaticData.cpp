@@ -2111,7 +2111,7 @@ void StaticData::SetExecPath(const std::string &path)
    */
   
   // NOT TESTED
-  std::cout << "TESTING: " <<"StaticData::SetExecPath(): " <<'\n';
+  // std::cout << "TESTING: " <<"StaticData::SetExecPath(): " <<'\n';
   size_t pos = path.rfind("/");
   if (pos !=  string::npos)
   {
