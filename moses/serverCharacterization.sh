@@ -5,13 +5,13 @@
 #sudo another command before executing to allow smooth operation
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DATADIR=${DIR}/data_base/Threads_1
+DATADIR=${DIR}/data_base/Threads_2_Trial2
 
-NTHREAD_SERVER=1
-CORES_SERVER=10-11
+NTHREAD_SERVER=2
+CORES_SERVER=21-23
 
 NTHREAD_CLIENT=1
-CORES_CLIENT=21-23
+CORES_CLIENT=9-11
 
 mkdir ${DATADIR}
 

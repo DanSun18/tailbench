@@ -28,7 +28,7 @@ echo $! > client.pid
 
 sudo chrt -f -p 99 $(cat client.pid)
 
-wait $(cat client.pid)
+wait $(cat server.pid)
 
 # Cleanup
 source ./kill_networked.sh
