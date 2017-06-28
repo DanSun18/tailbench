@@ -72,6 +72,7 @@ void* recv(void* c) {
 }
 
 int main(int argc, char* argv[]) {
+    std::cout << "----------Starting Clients----------" << '\n';
     int nthreads = getOpt<int>("TBENCH_CLIENT_THREADS", 1);
     std::string server = getOpt<std::string>("TBENCH_SERVER", "");
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 7000);
@@ -80,7 +81,7 @@ int main(int argc, char* argv[]) {
 
     NetworkedClient* client = new NetworkedClient(nthreads, server, serverport);
 
-    //std::cout << "TESTING: " << "NetworkedClient initiated\n";
+    std::cout << "----------NetworkedClient initiated----------" << '\n';
 
     std::vector<pthread_t> senders(nthreads);
     std::vector<pthread_t> receivers(nthreads);

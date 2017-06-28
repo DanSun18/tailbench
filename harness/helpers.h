@@ -30,7 +30,10 @@ static T getOpt(const char* name, T defVal) {
 
     //std::cout << "TESTING: " << "getting option" << name << '\n';
     const char* opt = getenv(name);
-    if (!opt) return defVal;
+    if (!opt){
+	std::cout << name << " = " << defVal << std::endl; 
+	return defVal;
+	}
     std::cout << name << " = " << opt << std::endl;
     
     std::stringstream ss(opt);

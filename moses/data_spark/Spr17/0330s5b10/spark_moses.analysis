@@ -1,0 +1,108 @@
+
+
+
+ Analysis:
+lats_12_kmeans_2-11,26-35_100 :
+95 percentile service time: 9.31755
+95 percentile latency time: 57.483403
+
+
+lats_12_kmeans_2-11,26-35_200 :
+95 percentile service time: 6.751508
+95 percentile latency time: 145.123678
+
+
+lats_12_kmeans_2-11,26-35_300 :
+95 percentile service time: 7.137938
+95 percentile latency time: 526.522733
+
+
+lats_12_kmeans_2-11,26-35_400 :
+95 percentile service time: 6.378249
+95 percentile latency time: 1506.412285
+
+
+lats_12_kmeans_2-11,26-35_500 :
+95 percentile service time: 2.813582
+95 percentile latency time: 1965.230273
+
+
+lats_12_kmeans_2-11,26-35_600 :
+95 percentile service time: 5.491456
+95 percentile latency time: 2041.958983
+
+
+lats_12_kmeans_2-11,26-35_700 :
+95 percentile service time: 2.588089
+95 percentile latency time: 2828.414466
+
+
+lats_12_kmeans_2-11,26-35_800 :
+95 percentile service time: 2.455668
+95 percentile latency time: 2776.493611
+
+
+lats_12_kmeans_2-11,26-35_900 :
+95 percentile service time: 2.243406
+95 percentile latency time: 2580.79843
+
+
+lats_12_kmeans_2-11,26-35_1000 :
+95 percentile service time: 2.100027
+95 percentile latency time: 2882.684259
+
+
+
+
+
+ Analysis:
+lats_12_kmeans_2-11,26-35_100 :
+95 percentile service time: 9.392874
+95 percentile latency time: 38.427636
+
+
+lats_12_kmeans_2-11,26-35_200 :
+95 percentile service time: 8.213061
+95 percentile latency time: 307.047517
+
+
+lats_12_kmeans_2-11,26-35_300 :
+95 percentile service time: 8.256881
+95 percentile latency time: 524.90602
+
+
+lats_12_kmeans_2-11,26-35_400 :
+95 percentile service time: 6.479876
+95 percentile latency time: 777.438193
+
+
+lats_12_kmeans_2-11,26-35_500 :
+95 percentile service time: 2.947056
+95 percentile latency time: 1952.762674
+
+
+lats_12_kmeans_2-11,26-35_600 :
+95 percentile service time: 2.496638
+95 percentile latency time: 2028.96368
+
+
+lats_12_kmeans_2-11,26-35_700 :
+95 percentile service time: 2.490337
+95 percentile latency time: 2415.025457
+
+
+lats_12_kmeans_2-11,26-35_800 :
+95 percentile service time: 2.347746
+95 percentile latency time: 2391.864305
+
+
+lats_12_kmeans_2-11,26-35_900 :
+95 percentile service time: 2.245126
+95 percentile latency time: 2886.422252
+
+
+lats_12_kmeans_2-11,26-35_1000 :
+95 percentile service time: 1.919637
+95 percentile latency time: 3216.920867
+
+

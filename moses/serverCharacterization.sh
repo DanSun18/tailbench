@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#This script is used to characterize the performance of server
+#pin this to a core that is different from client and server
+#sudo another command before executing to allow smooth operation
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DATADIR=${DIR}/data_base/Threads_1
+
+NTHREAD_SERVER=1
+CORES_SERVER=10-11
+
+NTHREAD_CLIENT=1
+CORES_CLIENT=21-23
+
+mkdir ${DATADIR}
+
+for QPS in {100..1000..50}
+do
+	MAXREQS=$((30 * ${QPS}))
+	WARMUPREQS=$((20 * ${QPS}))
+	source ${DIR}/run_networked.sh ${NTHREAD_SERVER} ${MAXREQS} \
+			${WARMUPREQS} ${CORES_SERVER} ${QPS} \
+			${NTHREAD_CLIENT} ${CORES_CLIENT}
+	sudo cp lats.bin ${DATADIR}/QPS${QPS}.bin
+	sleep 5 #wait between execution
+done
+
+ANALYSISFILE=${DATADIR}/analysis.txt
+touch ${ANALYSISFILE}
+
+for QPS in {100..1000..50}
+do
+	echo -e QPS: ${QPS} | tee -a ${ANALYSISFILE}
+	./parselatsbin.py ${DATADIR}/QPS${QPS}.bin | tee -a ${ANALYSISFILE}
+	echo -e '' | tee -a ${ANALYSISFILE}
+done

@@ -316,12 +316,14 @@ NetworkedServer* server;
  * API
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
+    std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;
     std::string serverurl = getOpt<std::string>("TBENCH_SERVER", "");
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 7000);
     int nclients = getOpt<int>("TBENCH_NCLIENTS", 1);
     // std::cout << "TESTING: " << nthreads << " threads for server are detected\n";
     server = new NetworkedServer(nthreads, serverurl, serverport, nclients);
+    std::cout << "----------Server Started----------" << '\n';
 }
 
 void tBenchServerThreadStart() {
