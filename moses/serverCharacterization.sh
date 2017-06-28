@@ -23,6 +23,7 @@ do
 			${WARMUPREQS} ${CORES_SERVER} ${QPS} \
 			${NTHREAD_CLIENT} ${CORES_CLIENT}
 	sudo cp lats.bin ${DATADIR}/QPS${QPS}.bin
+	echo -e "\n\n"
 	sleep 5 #wait between execution
 done
 

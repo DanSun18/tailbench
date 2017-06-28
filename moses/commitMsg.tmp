@@ -1,1 +1,1 @@
-Modified run_networked.sh to allow server to finish
+modified serverCharacterization.sh so that output of each run is separated by empty lines
