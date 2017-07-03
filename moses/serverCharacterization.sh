@@ -5,7 +5,7 @@
 #sudo another command before executing to allow smooth operation
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DATADIR=${DIR}/data_base/Threads_2_Trial2
+DATADIR=${DIR}/data_base/Threads2
 
 NTHREAD_SERVER=2
 CORES_SERVER=21-23
@@ -14,6 +14,8 @@ NTHREAD_CLIENT=1
 CORES_CLIENT=9-11
 
 mkdir ${DATADIR}
+
+sudo cpupower -c "${CORES_SERVER},${CORES_CLIENT}" frequency-set -g performance
 
 for QPS in {100..1000..50}
 do
@@ -26,6 +28,9 @@ do
 	echo -e "\n\n"
 	sleep 5 #wait between execution
 done
+
+#restore cpu gorvernor
+sudo cpupower -c "${CORES_SERVER},${CORES_CLIENT}" frequency-set -g ondemand
 
 ANALYSISFILE=${DATADIR}/analysis.txt
 touch ${ANALYSISFILE}
