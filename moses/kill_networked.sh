@@ -1,6 +1,15 @@
 #!/bin/bash
 
-kill -9 $(cat server.pid)
-kill -9 $(cat client.pid)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-rm server.pid client.pid
+if [ -e ${DIR}/server.pid ]
+then
+        kill -9 $(cat ${DIR}/server.pid)
+        rm server.pid
+fi
+
+if [ -e ${DIR}/client.pid ]
+then
+        kill -9 $(cat ${DIR}/client.pid)
+        rm client.pid
+fi
