@@ -37,7 +37,7 @@ void* send(void* c) {
             std::cerr << "[CLIENT] send() failed : " << client->errmsg() \
                 << std::endl;
             std::cerr << "[CLIENT] Not sending further request" << std::endl;
-
+		client->dumpAllStats();
             break; // We are done
         }
 //	std::cerr << "client finish sending request " << std::endl;
@@ -54,6 +54,7 @@ void* recv(void* c) {
         if (!client->recv(&resp)) {
             std::cerr << "[CLIENT] recv() failed : " << client->errmsg() \
                 << std::endl;
+	client->dumpAllStats();
             return nullptr;
         }
 
