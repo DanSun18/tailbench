@@ -15,34 +15,36 @@ fi
 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "DIR=${DIR}"
 source ${DIR}/../configs.sh
 
-BINDIR=./bin
+BINDIR=${DIR}/bin
 
 # Setup
-cp moses.ini.template moses.ini
-sed -i -e "s#@DATA_ROOT#$DATA_ROOT#g" moses.ini
+cp ${DIR}/moses.ini.template ${DIR}/moses.ini
+sed -i -e "s#@DATA_ROOT#$DATA_ROOT#g" ${DIR}/moses.ini
 
 # Launch Server
 TBENCH_MAXREQS=${TBENCH_MAXREQS} TBENCH_WARMUPREQS=${TBENCH_WARMUPREQS} TBENCH_NCLIENTS=1 \
 taskset -c ${SERVER_CORES} ${BINDIR}/moses_server_networked \
-    -config ./moses.ini \
+    -config ${DIR}/moses.ini \
     -input-file ${DATA_ROOT}/moses/testTerms \
-    -threads ${SERVER_THREADS} -num-tasks 100000 -verbose 0 &
+    -threads ${SERVER_THREADS} -num-tasks 7500000 -verbose 0 &
 
-echo $! > server.pid
-sudo chrt -r -p 99 $(cat server.pid)
+echo $! > ${DIR}/server.pid
+sudo chrt -r -p 99 $(cat ${DIR}/server.pid)
 
 sleep 5
 
 # Launch Client
 TBENCH_QPS=${TBENCH_QPS} TBENCH_MINSLEEPNS=10000 TBENCH_CLIENT_THREADS=${TBENCH_CLIENT_THREADS} taskset -c ${CLIENT_CORES}  ${BINDIR}/moses_client_networked &
-echo $! > client.pid
+echo $! > ${DIR}/client.pid
 
-sudo chrt -f -p 99 $(cat client.pid)
+sudo chrt -f -p 99 $(cat ${DIR}/client.pid)
 
-wait $(cat server.pid)
-wait $(cat client.pid)
+wait $(cat ${DIR}/server.pid)
+wait $(cat ${DIR}/client.pid)
 
 # Cleanup
-source ./kill_networked.sh
+rm ${DIR}/server.pid
+rm ${DIR}/client.pid
