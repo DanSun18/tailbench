@@ -290,7 +290,7 @@ void Client::dumpAllStats() {
 	    out<<'\n';
    		}
         _recvIds.pop();
-        _genTimes.pop()
+        _genTimes.pop();
    		_queueTimes.pop();
    		_svcTimes.pop();
    		_sjrnTimes.pop();
