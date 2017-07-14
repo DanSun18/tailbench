@@ -278,19 +278,19 @@ void Client::dumpAllStats() {
 		QPSSequence.pop();
     	int reqs = _sjrnTimes.front().size();
     	for (int r = 0; r < reqs; ++r) {
-	       // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
-	       //             sizeof(queueTimes[r]));
-	       // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
-	        //            sizeof(svcTimes[r]));
-	       // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
-	       //             sizeof(sjrnTimes[r]));	
-		out<<(_queueTimes.front())[r];
+        out << (_recvIds.front())[r];
+        out << ' ';
+        out << (_genTimes.front())[r];
+        out << ' ';
+        out<<(_queueTimes.front())[r];
 		out<<' ';
 		out<<(_svcTimes.front())[r];
-	        out<<' ';
-	        out<<(_sjrnTimes.front())[r];
-	        out<<'\n';
+	    out<<' ';
+	    out<<(_sjrnTimes.front())[r];
+	    out<<'\n';
    		}
+        _recvIds.pop();
+        _genTimes.pop()
    		_queueTimes.pop();
    		_svcTimes.pop();
    		_sjrnTimes.pop();
@@ -300,19 +300,16 @@ void Client::dumpAllStats() {
     QPSSequence.pop();
     int reqs = sjrnTimes.size();
     for (int r = 0; r < reqs; ++r) {
-        //std::cout << "[Client] Dumping last QPS interval request" << r <<'\n';   
-	// out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
-           //             sizeof(queueTimes[r]));
-           // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
-            //            sizeof(svcTimes[r]));
-           // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
-           //             sizeof(sjrnTimes[r]));    
-        out<< queueTimes[r];
-        out<<' ';
-        out<< svcTimes[r];
-        out<<' ';
-        out<<sjrnTimes[r];
-        out<<'\n';
+        out << recvIds[r];
+        out << ' ';
+        out << genTimes[r];
+        out << ' ';
+        out << queueTimes[r];
+        out << ' ';
+        out << svcTimes[r];
+        out << ' ';
+        out << sjrnTimes[r];
+        out << '\n';
     }
     out.close();
 	dumped = true;
