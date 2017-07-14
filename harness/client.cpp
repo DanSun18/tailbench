@@ -110,10 +110,14 @@ Client::Client(int _nthreads) : dqpsLookup("input.test") {
     //QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
 
     dist = nullptr; // Will get initialized in startReq()
-
+	dumped = false;
     startedReqs = 0;
 
     tBenchClientInit();
+}
+
+bool Client::getDumped(){
+	return dumped;
 }
 
 Request* Client::startReq() {
@@ -258,8 +262,15 @@ void Client::dumpStats() {
 
 void Client::dumpAllStats() {
     // std::cout << "TESTING: " << "dumping all stats" << '\n';
+	pthread_mutex_lock(&lock);
+	if (dumped == true)
+	{
+		std::cout << "[Client] dumpAllStats(): Stats already dumped\n";
+		pthread_mutex_unlock(&lock);
+		return;
+	}
 	int intervals = QPSSequence.size();
-    std::cout << "TESTING: " << intervals + 1 << " QPS intervals are detected\n";
+    std::cout << "[Client] " << intervals + 1 << " QPS intervals are detected\n";
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
 	for(int i = 0; i < intervals ; i++)
 	{
@@ -289,7 +300,8 @@ void Client::dumpAllStats() {
     QPSSequence.pop();
     int reqs = sjrnTimes.size();
     for (int r = 0; r < reqs; ++r) {
-           // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
+        //std::cout << "[Client] Dumping last QPS interval request" << r <<'\n';   
+	// out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
            //             sizeof(queueTimes[r]));
            // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
             //            sizeof(svcTimes[r]));
@@ -303,6 +315,9 @@ void Client::dumpAllStats() {
         out<<'\n';
     }
     out.close();
+	dumped = true;
+	std::cout << "[Client] All stats dumped\n";
+	pthread_mutex_unlock(&lock);
 }
 
 /*******************************************************************************

@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <csignal>
 
 void* send(void* c) {
     NetworkedClient* client = reinterpret_cast<NetworkedClient*>(c);
@@ -37,7 +38,10 @@ void* send(void* c) {
             std::cerr << "[CLIENT] send() failed : " << client->errmsg() \
                 << std::endl;
             std::cerr << "[CLIENT] Not sending further request" << std::endl;
-		client->dumpAllStats();
+//	if(!client -> getDumped())
+//        {
+//                client->dumpAllStats();
+//        }
             break; // We are done
         }
 //	std::cerr << "client finish sending request " << std::endl;
@@ -54,7 +58,12 @@ void* recv(void* c) {
         if (!client->recv(&resp)) {
             std::cerr << "[CLIENT] recv() failed : " << client->errmsg() \
                 << std::endl;
-	client->dumpAllStats();
+//		if(!client -> getDumped())
+//       	{
+//        		std::cout << "[CLIENT] recv issues dumpAllSstats()\n";
+//		        client->dumpAllStats();
+//			std::cout << "[CLIENT] recv(): client dumped all stats\n";
+//        	}
             return nullptr;
         }
 
@@ -79,9 +88,8 @@ int main(int argc, char* argv[]) {
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 7000);
 
     //std::cout << "TESTING: " << "finished parsing parameters\n";
-
+	signal(SIGPIPE, SIG_IGN);
     NetworkedClient* client = new NetworkedClient(nthreads, server, serverport);
-
     std::cout << "----------NetworkedClient initiated----------" << '\n';
 
     std::vector<pthread_t> senders(nthreads);
@@ -101,12 +109,21 @@ int main(int argc, char* argv[]) {
 
     for (int t = 0; t < nthreads; ++t) {
         int status;
+//	std::cout << "[CLIENT] joining sender" << t << '\n';
         status = pthread_join(senders[t], nullptr);
         assert(status == 0);
+//	std::cout << "[CLIENT] joined sender" << t << '\n';
 
+//	std::cout << "[CLIENT] joining receiver" << t << '\n';
         status = pthread_join(receivers[t], nullptr);
         assert(status == 0);
+//	std::cout << "[CLIENT] joined receiver" << t << '\n';
     }
-
+//	std::cout << "[Client] send and recv threads exited\n";
+	if(!client -> getDumped())
+	{
+		client->dumpAllStats();
+	}
+	std::cout << "----------Client exiting----------\n";
     return 0;
 }
