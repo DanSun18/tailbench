@@ -95,7 +95,7 @@ class Client {
         void _startRoi();
 
         DQPSLookup dqpsLookup;
-
+	bool dumped;
 
 
     public:
@@ -107,7 +107,8 @@ class Client {
         void startRoi();
         void dumpStats();
         void dumpAllStats();
-
+	
+	bool getDumped();
 };
 
 class NetworkedClient : public Client {
