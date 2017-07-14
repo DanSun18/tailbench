@@ -150,9 +150,14 @@ Request* Client::startReq() {
                 _sjrnTimes.push(sjrnTimes);
                 _svcTimes.push(svcTimes);
                 _queueTimes.push(queueTimes);
+                _recvIds.push(recvIds);
+                _genTimes.push(genTimes);
+
                 sjrnTimes.clear();
                 svcTimes.clear();
                 queueTimes.clear();
+                recvIds.clear();
+                genTimes.clear();
                 // std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
             }
             current_qps = newQPS;
@@ -198,10 +203,13 @@ void Client::finiReq(Response* resp) {
         uint64_t sjrn = curNs - req->genNs;
         assert(sjrn >= resp->svcNs);
         uint64_t qtime = sjrn - resp->svcNs;
+        uint64_t genTime = req->genNs;
 
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
+        recvIds.push_back(resp->id);
+        genTimes.push_back(genTime);
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
