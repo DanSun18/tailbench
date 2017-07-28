@@ -5,6 +5,9 @@
 #include <pthread.h>
 #include <xapian.h>
 #include <vector>
+#include <queue>
+#include <utility>
+#include <sched.h>
 
 class Server {
     private:
@@ -12,7 +15,7 @@ class Server {
         static volatile std::atomic_ulong numReqsProcessed;
         static const unsigned int MSET_SIZE = 20480;
         static pthread_barrier_t barrier;
-
+        static std::queue<std::pair<void *,size_t>> request_queue;
         Xapian::Database db;
         Xapian::Enquire enquire;
         Xapian::Stem stemmer;
@@ -22,9 +25,10 @@ class Server {
         Xapian::MSet mset;
 
         int id;
-	int request_count;
+	    int request_count;
         void _run();
         void processRequest();
+        void receiveRequest();
 
     public:
         Server(int id, std::string dbPath);
@@ -32,6 +36,7 @@ class Server {
 
         static void* run(void* v);
         static void init(unsigned long _numReqsToProcess, unsigned numServers);
+        static void* receive(void *v);
         static void fini();
 };
 

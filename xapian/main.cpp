@@ -31,6 +31,13 @@ int main(int argc, char* argv[]) {
     unsigned numServers = 4;
     string dbPath = "db";
 
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(13,&cpuset);
+
+    pthread_t current_thread = thread_self();
+    pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
     int c;
     string optString = "n:d:r:";
     while ((c = getopt(argc, argv, optString.c_str())) != -1) {
@@ -72,7 +79,16 @@ int main(int argc, char* argv[]) {
         }
     }
     
+    cpu_set_t cpuset_receive_thread;
+    CPU_ZERO(&cpuset_receive_thread);
+    CPU_SET(12,&cpuset_receive_thread);
+
+    pthread_t *receive_thread = NULL;
+    pthread_create(receive_thread,NULL,Server::receive_thread,servers[numServers-1]);
+
+    pthread_setaffinity_np(*receive_thread, sizeof(cpu_set_t), &cpuset);
     Server::run(servers[numServers - 1]);
+    pthread_join(*receive_thread,NULL);
 
     if (numServers > 1) {
         for (unsigned i = 0; i < numServers - 1; i++)

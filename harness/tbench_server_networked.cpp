@@ -172,7 +172,6 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     Request* req;
     int fd = -1;
     
-    //std::cerr<<"begin retreive request from client port.."<<std::endl;
     while (!success && clientFds.size() > 0) {
         int maxFd = -1;
         fd_set readSet;
@@ -182,15 +181,12 @@ size_t NetworkedServer::recvReq(int id, void** data) {
             if (f > maxFd) maxFd = f;
         }
 	
-	//std::cerr<<"reach here 1 " <<"maxfd is "<<maxFd<<std::endl;
         int ret = select(maxFd + 1, &readSet, nullptr, nullptr, nullptr);
-	//std::cerr<<"reach here 1.5 " <<std::endl;
         if (ret == -1) {
             std::cerr << "select() failed: " << strerror(errno) << std::endl;
             exit(-1);
         }
-        
-        //std::cerr<<"reach here 2 " << std::endl;
+
         fd = -1;
 
         for (size_t i = 0; i < clientFds.size(); ++i) {

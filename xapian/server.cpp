@@ -51,13 +51,25 @@ void Server::_run() {
     }
 }
 
+void Server::receiveRequest() {
+    //const unsigned MAX_TERM_LEN = 256;
+    //char term[MAX_TERM_LEN];
+    void *termPtr;
+    size_t len = tBenchRecvReq(&termPtr);
+    request_queue.push(make_pair(termPtr,len));
+}
+
 void Server::processRequest() {
     const unsigned MAX_TERM_LEN = 256;
     char term[MAX_TERM_LEN];
-    void* termPtr;
+    //void* termPtr;
     
 //    cerr << "here begin to receive request " << request_count << endl;
-    size_t len = tBenchRecvReq(&termPtr);
+   // size_t len = tBenchRecvReq(&termPtr);
+    std::pair<void *,size_t> request = request_queue.pop();
+    void* termPtr = request.first;
+    size_t len  = request.second;
+
     memcpy(reinterpret_cast<void*>(term), termPtr, len);
     term[len] = '\0';
     request_count++;
@@ -91,6 +103,12 @@ void* Server::run(void* v) {
     return NULL;
 }
 
+void *Server::receive(void *v) {
+    pthread_barrier_wait(&barrier);
+    while(numReqsProcessed < numReqsToProcess) {
+        receiveRequest();
+    }
+}
 void Server::init(unsigned long _numReqsToProcess, unsigned numServers) {
     numReqsToProcess = _numReqsToProcess;
     pthread_barrier_init(&barrier, NULL, numServers);
