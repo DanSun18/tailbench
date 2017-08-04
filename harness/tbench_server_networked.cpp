@@ -255,7 +255,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     uint64_t curNs = getCurNs();
     assert(curNs > reqInfo[id].startNs);
     resp->svcNs = curNs - reqInfo[id].startNs;
-
+    resp->startNs = reqInfo[id].startNs;
     int fd = activeFds[id];
     int totalLen = sizeof(Response) - MAX_RESP_BYTES + len;
     int sent = sendfull(fd, reinterpret_cast<const char*>(resp), totalLen, 0);
