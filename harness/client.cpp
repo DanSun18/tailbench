@@ -150,9 +150,11 @@ Request* Client::startReq() {
                 _sjrnTimes.push(sjrnTimes);
                 _svcTimes.push(svcTimes);
                 _queueTimes.push(queueTimes);
+		_startTimes.push(startTimes);
                 sjrnTimes.clear();
                 svcTimes.clear();
                 queueTimes.clear();
+		startTimes.clear();
                 // std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
             }
             current_qps = newQPS;
@@ -202,6 +204,7 @@ void Client::finiReq(Response* resp) {
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
+	startTimes.push_back(resp->startNs);
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
@@ -270,11 +273,14 @@ void Client::dumpAllStats() {
 		out<<(_svcTimes.front())[r];
 	        out<<' ';
 	        out<<(_sjrnTimes.front())[r];
+		out<<' ';
+		out <<(_startTimes.front())[r];
 	        out<<'\n';
    		}
    		_queueTimes.pop();
    		_svcTimes.pop();
    		_sjrnTimes.pop();
+                _startTimes.pop();
 	}
     //dumping the last QPS interval without putting it into the queue
     // out << "QPS = " << current_qps << '\n';
@@ -292,6 +298,8 @@ void Client::dumpAllStats() {
         out<< svcTimes[r];
         out<<' ';
         out<<sjrnTimes[r];
+	out<<' ';
+	out<<startTimes[r];
         out<<'\n';
     }
     out.close();

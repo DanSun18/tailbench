@@ -85,11 +85,12 @@ class Client {
         std::vector<uint64_t> svcTimes;
         std::vector<uint64_t> queueTimes;
         std::vector<uint64_t> sjrnTimes;
+	std::vector<uint64_t> startTimes;
 
         std::queue< std::vector<uint64_t> > _svcTimes;
         std::queue< std::vector<uint64_t> > _queueTimes;
         std::queue< std::vector<uint64_t> > _sjrnTimes;
-
+	std::queue<std::vector<uint64_t> > _startTimes;
         std::queue<double> QPSSequence;
 
         void _startRoi();

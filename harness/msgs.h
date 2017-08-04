@@ -36,6 +36,7 @@ struct Response {
     ResponseType type;
     uint64_t id;
     uint64_t svcNs;
+    uint64_t startNs;
     size_t len;
     char data[MAX_RESP_BYTES];
 };
