@@ -6,4 +6,4 @@ source ${DIR}/../configs.sh
 BINDIR=./bin
 
 
-TBENCH_QPS=200 TBENCH_MINSLEEPNS=10000 TBENCH_CLIENT_THREADS=2 taskset -c 12-23  ${BINDIR}/moses_client_networked
+TBENCH_QPS=300 TBENCH_MINSLEEPNS=10000 TBENCH_CLIENT_THREADS=1 taskset -c 9-11  ${BINDIR}/moses_client_networked
