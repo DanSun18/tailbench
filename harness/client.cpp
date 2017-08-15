@@ -1,18 +1,18 @@
 /** $lic$
- * Copyright (C) 2016-2017 by Massachusetts Institute of Technology
- *
- * This file is part of TailBench.
- *
- * If you use this software in your research, we request that you reference the
- * TaiBench paper ("TailBench: A Benchmark Suite and Evaluation Methodology for
- * Latency-Critical Applications", Kasture and Sanchez, IISWC-2016) as the
- * source in any publications that use this software, and that you send us a
- * citation of your work.
- *
- * TailBench is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.
- */
+* Copyright (C) 2016-2017 by Massachusetts Institute of Technology
+*
+* This file is part of TailBench.
+*
+* If you use this software in your research, we request that you reference the
+* TaiBench paper ("TailBench: A Benchmark Suite and Evaluation Methodology for
+* Latency-Critical Applications", Kasture and Sanchez, IISWC-2016) as the
+* source in any publications that use this software, and that you send us a
+* citation of your work.
+*
+* TailBench is distributed in the hope that it will be useful, but WITHOUT ANY
+* WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.
+*/
 
 #include "client.h"
 #include "helpers.h"
@@ -44,124 +44,126 @@
 #include <iostream>
 #include <unistd.h>
 /*******************************************************************************
- * Dynamic QPS Lookup
- *******************************************************************************/
+* Dynamic QPS Lookup
+*******************************************************************************/
 
 DQPSLookup::DQPSLookup(std::string inputFile){
-    // std::cout << "TESTING: " << "input file is " << inputFile.c_str() << '\n';
-    started = false;
-    std::ifstream infile(inputFile.c_str());
-    //take input
-    uint64_t duration;
-    double QPS;
-    while(infile >> duration >> QPS)
-    {
-        QPStiming.push(new QPScombo(duration, QPS));
-        //std::cout << "TESTING: " << "pushed combo " << duration << ' ' << QPS <<'\n';  
-    }
-    if(QPStiming.empty())
-    {
-        std::cerr << "No input is read, TbENCH_QPS specified as parameter will be used\n";
-    }
-    startingNs = getCurNs();
+// std::cout << "TESTING: " << "input file is " << inputFile.c_str() << '\n';
+started = false;
+std::ifstream infile(inputFile.c_str());
+//take input
+uint64_t duration;
+double QPS;
+while(infile >> duration >> QPS)
+{
+QPStiming.push(new QPScombo(duration, QPS));
+//std::cout << "TESTING: " << "pushed combo " << duration << ' ' << QPS <<'\n';  
+}
+if(QPStiming.empty())
+{
+std::cerr << "No input is read, TbENCH_QPS specified as parameter will be used\n";
+}
+startingNs = getCurNs();
 }
 
 double DQPSLookup::currentQPS(){
-    
-    if(QPStiming.empty())
-        return -1;
 
-    uint64_t currentNs = getCurNs();
-    if(currentNs - startingNs >= (QPStiming.front()->getDuration())*1000*1000*1000){
-        QPStiming.pop();
-        if(QPStiming.empty())
-            return -1;
-        startingNs = getCurNs();
-        return QPStiming.front()->getQPS();
-    }
-    else{
-        return QPStiming.front()->getQPS();
-    }
+if(QPStiming.empty())
+return -1;
+
+uint64_t currentNs = getCurNs();
+if(currentNs - startingNs >= (QPStiming.front()->getDuration())*1000*1000*1000){
+QPStiming.pop();
+if(QPStiming.empty())
+    return -1;
+startingNs = getCurNs();
+return QPStiming.front()->getQPS();
+}
+else{
+return QPStiming.front()->getQPS();
+}
 }
 
 void DQPSLookup::setStartingNs(){
-    if(!started)
-    {
-    started = true;
-    startingNs = getCurNs();
-    }
+if(!started)
+{
+started = true;
+startingNs = getCurNs();
+}
 }
 /*******************************************************************************
- * Client
- *******************************************************************************/
+* Client
+*******************************************************************************/
 
 Client::Client(int _nthreads) : dqpsLookup("input.test") {
-    status = INIT;
+status = INIT;
 
-    nthreads = _nthreads;
-    pthread_mutex_init(&lock, nullptr);
-    pthread_barrier_init(&barrier, nullptr, nthreads);
-    
-    minSleepNs = getOpt("TBENCH_MINSLEEPNS", 0);
-    seed = getOpt("TBENCH_RANDSEED", 0);
-    current_qps = getOpt<double>("TBENCH_QPS", 1000.0);
-    lambda = current_qps * 1e-9;
-    
-    //QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
+nthreads = _nthreads;
+pthread_mutex_init(&lock, nullptr);
+pthread_barrier_init(&barrier, nullptr, nthreads);
 
-    dist = nullptr; // Will get initialized in startReq()
-	dumped = false;
-    startedReqs = 0;
+minSleepNs = getOpt("TBENCH_MINSLEEPNS", 0);
+seed = getOpt("TBENCH_RANDSEED", 0);
+current_qps = getOpt<double>("TBENCH_QPS", 1000.0);
+lambda = current_qps * 1e-9;
 
-    tBenchClientInit();
+//QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
+
+dist = nullptr; // Will get initialized in startReq()
+dumped = false;
+startedReqs = 0;
+
+tBenchClientInit();
 }
 
 bool Client::getDumped(){
-	return dumped;
+return dumped;
 }
 
 Request* Client::startReq() {
-    if (status == INIT) {
-        pthread_barrier_wait(&barrier); // Wait for all threads to start up
+if (status == INIT) {
+pthread_barrier_wait(&barrier); // Wait for all threads to start up
 
-        pthread_mutex_lock(&lock);
+pthread_mutex_lock(&lock);
 
-        if (!dist) {
+if (!dist) {
 
-            uint64_t curNs = getCurNs();
-            dist = new ExpDist(lambda, seed, curNs);
+    uint64_t curNs = getCurNs();
+    dist = new ExpDist(lambda, seed, curNs);
 
-            status = WARMUP;
-            pthread_barrier_destroy(&barrier);
-            pthread_barrier_init(&barrier, nullptr, nthreads);
-        }
-        //dqpsLookup.setStartingNs();
-        pthread_mutex_unlock(&lock);
-        pthread_barrier_wait(&barrier);
-    }
+    status = WARMUP;
+    pthread_barrier_destroy(&barrier);
+    pthread_barrier_init(&barrier, nullptr, nthreads);
+}
+//dqpsLookup.setStartingNs();
+pthread_mutex_unlock(&lock);
+pthread_barrier_wait(&barrier);
+}
 
-    pthread_mutex_lock(&lock);
+pthread_mutex_lock(&lock);
 
-    if(status == ROI)
+if(status == ROI)
+{
+double newQPS = dqpsLookup.currentQPS();
+if(newQPS > 0 && current_qps!= newQPS)
+{
+    // std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
+    if(!sjrnTimes.empty())
     {
-        double newQPS = dqpsLookup.currentQPS();
-        if(newQPS > 0 && current_qps!= newQPS)
-        {
-            // std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
-            if(!sjrnTimes.empty())
-            {
-                QPSSequence.push(current_qps);
-                _sjrnTimes.push(sjrnTimes);
-                _svcTimes.push(svcTimes);
-                _queueTimes.push(queueTimes);
-                _recvIds.push(recvIds);
-                _genTimes.push(genTimes);
+	QPSSequence.push(current_qps);
+	_sjrnTimes.push(sjrnTimes);
+	_svcTimes.push(svcTimes);
+	_queueTimes.push(queueTimes);
+	_startTimes.push(startTimes);
+        _recvIds.push(recvIds);
+        _genTimes.push(genTimes);
 
-                sjrnTimes.clear();
-                svcTimes.clear();
-                queueTimes.clear();
-                recvIds.clear();
-                genTimes.clear();
+        sjrnTimes.clear();
+        svcTimes.clear();
+        queueTimes.clear();
+        recvIds.clear();
+	startTimes.clear();
+        genTimes.clear();
                 // std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
             }
             current_qps = newQPS;
@@ -212,6 +214,7 @@ void Client::finiReq(Response* resp) {
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
+	startTimes.push_back(resp->startNs);
         recvIds.push_back(resp->id);
         genTimes.push_back(genTime);
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
@@ -285,21 +288,30 @@ void Client::dumpAllStats() {
         out<<(_queueTimes.front())[r];
 		out<<' ';
 		out<<(_svcTimes.front())[r];
-	    out<<' ';
-	    out<<(_sjrnTimes.front())[r];
-	    out<<'\n';
+	        out<<' ';
+	        out<<(_sjrnTimes.front())[r];
+		out<<' ';
+		out <<(_startTimes.front())[r];
+	        out<<'\n';
    		}
         _recvIds.pop();
         _genTimes.pop();
    		_queueTimes.pop();
    		_svcTimes.pop();
    		_sjrnTimes.pop();
+                _startTimes.pop();
 	}
     //dumping the last QPS interval without putting it into the queue
     // out << "QPS = " << current_qps << '\n';
     QPSSequence.pop();
     int reqs = sjrnTimes.size();
     for (int r = 0; r < reqs; ++r) {
+           // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
+           //             sizeof(queueTimes[r]));
+           // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
+            //            sizeof(svcTimes[r]));
+           // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
+           //             sizeof(sjrnTimes[r]));    
         out << recvIds[r];
         out << ' ';
         out << genTimes[r];
@@ -309,6 +321,8 @@ void Client::dumpAllStats() {
         out << svcTimes[r];
         out << ' ';
         out << sjrnTimes[r];
+	out << ' ';
+	out << startTimes[r];
         out << '\n';
     }
     out.close();
