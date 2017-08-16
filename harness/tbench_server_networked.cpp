@@ -41,6 +41,21 @@
 #include <sstream>
 #include <string>
 
+// for Intel PCM
+#include <unistd.h>
+#include <signal.h>   // for atexit()
+#include <sys/time.h> // for gettimeofday()
+#include <math.h>
+#include <iomanip>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <cstring>
+#include <sstream>
+#include <assert.h>
+#include "../IntelPerformanceCounterMonitorV2.8/cpucounters.h"
+#include "../IntelPerformanceCounterMonitorV2.8/utils.h"
+
 /*******************************************************************************
  * NetworkedServer
  *******************************************************************************/
@@ -54,7 +69,12 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     reqbuf = new Request[nthreads]; 
 
     activeFds.resize(nthreads);
-
+    cstates1.resize(nthreads);
+    cstates2.resize(nthreads);
+    sktstate1.resize(nthreads);
+    sktstate2.resize(nthreads);
+    sstate1.resize(nthreads);
+    sstate2.resize(nthreads);
     recvClientHead = 0;
 
     // Get address info
@@ -165,6 +185,8 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
     return success;
 }
 
+
+//arguments: id is thread id
 size_t NetworkedServer::recvReq(int id, void** data) {
     pthread_mutex_lock(&recvLock);
 
@@ -311,11 +333,36 @@ __thread int tid;
  *******************************************************************************/
 std::atomic_int curTid;
 NetworkedServer* server;
+PCM * pcm;
+
+
+
 
 /*******************************************************************************
  * API
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
+    std::cout << "----------PCM Starting----------" << '\n'; 
+    m = PCM::getInstance();
+    PCM::ErrorCode status = m->program();
+    switch (status)
+    {
+    case PCM::Success:
+        break;
+    case PCM::MSRAccessDenied:
+        cerr << "Access to Intel(r) Performance Counter Monitor has denied (no MSR or PCI CFG space access)." << endl;
+        exit(EXIT_FAILURE);
+    case PCM::PMUBusy:
+        cerr << "Access to Intel(r) Performance Counter Monitor has denied (Performance Monitoring Unit is occupied by other application). Try to stop the application that uses PMU." << endl;
+        cerr << "Alternatively you can try running Intel PCM with option -r to reset PMU configuration at your own risk." << endl;
+        exit(EXIT_FAILURE);
+    default:
+        cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << endl;
+        exit(EXIT_FAILURE);
+    }
+    cerr << "\nDetected " << m->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << m->getUArchCodename() << "\"" << endl;
+    
+    const int cpu_model = m->getCPUModel();
     std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;
     std::string serverurl = getOpt<std::string>("TBENCH_SERVER", "");
