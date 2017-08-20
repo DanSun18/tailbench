@@ -105,7 +105,7 @@ static unsigned int getCurrentProcessorNumber(void)
     __asm__ ( "mov eax, 1;"
                 "cpuid;"
         "shr ebx, 24;"
-        "mov eax, ebx;")
+        "mov eax, ebx;");
 }
 
 
