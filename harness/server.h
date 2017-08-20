@@ -42,6 +42,9 @@
 #include <assert.h>
 #include "../IntelPerformanceCounterMonitorV2.8/cpucounters.h"
 #include "../IntelPerformanceCounterMonitorV2.8/utils.h"
+
+PCM * pcm;
+
 class Server {
     protected:
         struct ReqInfo {

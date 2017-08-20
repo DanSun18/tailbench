@@ -329,9 +329,9 @@ void Client::dumpAllStats() {
         out << ' ';
         out << retiredInstrs[r];
         out << ' ';
-        out << bytesRead[r];
+        out << sktReads[r];
         out << ' ';
-        out << bytesWritten[r];
+        out << sktWrites[r];
         out << '\n';
     }
     out.close();

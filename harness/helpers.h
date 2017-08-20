@@ -99,4 +99,14 @@ static int recvfull(int fd, char* msg, int len, int flags) {
     return (len - remaining);
 }
 
+
+static unsigned int getCurrentProcessorNumber(void)
+{
+    _asm {mov eax, 1}
+    _asm {cpuid}
+    _asm {shr ebx, 24}
+    _asm {mov eax, ebx}
+}
+
+
 #endif

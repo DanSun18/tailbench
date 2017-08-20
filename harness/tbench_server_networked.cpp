@@ -41,31 +41,8 @@
 #include <sstream>
 #include <string>
 
-// for Intel PCM
-#include <unistd.h>
-#include <signal.h>   // for atexit()
-#include <sys/time.h> // for gettimeofday()
-#include <math.h>
-#include <iomanip>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <cstring>
-#include <sstream>
-#include <assert.h>
-#include "../IntelPerformanceCounterMonitorV2.8/cpucounters.h"
-#include "../IntelPerformanceCounterMonitorV2.8/utils.h"
 
-/*******************************************************************************
- * helper functions
- *******************************************************************************/
-DWORD getCurrentProcessorNumber(void)
-{
-    _asm {mov eax, 1}
-    _asm {cpuid}
-    _asm {shr ebx, 24}
-    _asm {mov eax, ebx}
-}
+
 
 /*******************************************************************************
  * NetworkedServer
@@ -267,8 +244,8 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         unsigned int coreID = getCurrentProcessorNumber();
         unsigned int socketID = 1; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
-        core_state = pcm->getCoreCounterState(coreID);
-        socket_state = pcm->getSocketCounterState(socketID);
+        CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+        SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
         cstates[id] = core_state;
         sktstates[id] = socket_state;
         *data = reinterpret_cast<void*>(&req->data);
@@ -296,8 +273,8 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
         unsigned int coreID = getCurrentProcessorNumber();
         unsigned int socketID = 1; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
-        core_state = pcm->getCoreCounterState(coreID);
-        socket_state = pcm->getSocketCounterState(socketID);
+        CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+        SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
         unsigned long int instr = getInstructionsRetired(cstates[id], core_state);
         unsigned long int bytesRead = getBytesReadFromMC(sktstates[id], socket_state);
         unsigned long int bytesWritten = getBytesWrittenToMC(sktstates[id], socket_state);
@@ -369,7 +346,7 @@ __thread int tid;
  *******************************************************************************/
 std::atomic_int curTid;
 NetworkedServer* server;
-PCM * pcm;
+
 
 
 
@@ -379,24 +356,24 @@ PCM * pcm;
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
     std::cout << "----------PCM Starting----------" << '\n'; 
-    m = PCM::getInstance();
-    PCM::ErrorCode status = m->program();
+    pcm = PCM::getInstance();
+    PCM::ErrorCode status = pcm->program();
     switch (status)
     {
     case PCM::Success:
         break;
     case PCM::MSRAccessDenied:
-        cerr << "Access to Intel(r) Performance Counter Monitor has denied (no MSR or PCI CFG space access)." << endl;
+        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (no MSR or PCI CFG space access)." << std::endl;
         exit(EXIT_FAILURE);
     case PCM::PMUBusy:
-        cerr << "Access to Intel(r) Performance Counter Monitor has denied (Performance Monitoring Unit is occupied by other application). Try to stop the application that uses PMU." << endl;
-        cerr << "Alternatively you can try running Intel PCM with option -r to reset PMU configuration at your own risk." << endl;
+        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Performance Monitoring Unit is occupied by other application). Try to stop the application that uses PMU." << std::endl;
+        std::cerr << "Alternatively you can try running Intel PCM with option -r to reset PMU configuration at your own risk." << std::endl;
         exit(EXIT_FAILURE);
     default:
-        cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << endl;
+        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << std::endl;
         exit(EXIT_FAILURE);
     }
-    cerr << "\nDetected " << m->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << m->getUArchCodename() << "\"" << endl;
+    std::cerr << "\nDetected " << m->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << m->getUArchCodename() << "\"" << std::endl;
     
     const int cpu_model = m->getCPUModel();
     std::cout << "----------Server Starting----------" << '\n';
