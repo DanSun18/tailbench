@@ -373,9 +373,9 @@ void tBenchServerInit(int nthreads) {
         std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::cerr << "\nDetected " << m->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << m->getUArchCodename() << "\"" << std::endl;
+    std::cerr << "\nDetected " << pcm->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << pcm->getUArchCodename() << "\"" << std::endl;
     
-    const int cpu_model = m->getCPUModel();
+    const int cpu_model = pcm->getCPUModel();
     std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;
     std::string serverurl = getOpt<std::string>("TBENCH_SERVER", "");
