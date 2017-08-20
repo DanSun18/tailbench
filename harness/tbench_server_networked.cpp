@@ -41,7 +41,7 @@
 #include <sstream>
 #include <string>
 
-
+#include <sched.h> //for sched_getcpu
 
 
 /*******************************************************************************
@@ -241,7 +241,7 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         activeFds[id] = fd;
         // When start to process each request, note down counter states with performance counter
         //find out core id current thread is on
-        unsigned int coreID = getCurrentProcessorNumber();
+        unsigned int coreID = sched_getcpu();
         unsigned int socketID = 1; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         CoreCounterState core_state = pcm->getCoreCounterState(coreID);
@@ -270,7 +270,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
 
     // finishing up request, find counter parameters
         //find out core id current thread is on
-        unsigned int coreID = getCurrentProcessorNumber();
+        unsigned int coreID = sched_getcpu();
         unsigned int socketID = 1; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         CoreCounterState core_state = pcm->getCoreCounterState(coreID);
