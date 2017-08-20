@@ -72,9 +72,8 @@ class NetworkedServer : public Server {
         std::vector<int> activeFds; // Currently active client fds for 
                                     // each thread
         //state1 stores counter state when start processing request, socket 2 store when finishing
-        std::vector<CoreCounterState> cstates1, cstates2;
-        std::vector<SocketCounterState> sktstate1, sktstate2;
-        SystemCounterState sstate1, sstate2;
+        std::vector<CoreCounterState> cstates;
+        std::vector<SocketCounterState> sktstates;
         size_t recvClientHead; // The idx of the client at the 'head' of the 
                                // receive queue. We start with this idx and go
                                // down the list of eligible fds to receive from.

@@ -85,19 +85,25 @@ class Client {
         std::vector<uint64_t> svcTimes;
         std::vector<uint64_t> queueTimes;
         std::vector<uint64_t> sjrnTimes;
-	std::vector<uint64_t> startTimes;
+	    std::vector<uint64_t> startTimes; //start time of service
         std::vector<uint64_t> recvIds;
         std::vector<uint64_t> genTimes;
+        std::vector<uint64_t> sktWrites;
+        std::vector<uint64_t> sktReads;
+        std::vector<uint64_t> retiredInstrs;
 
-        std::queue< std::vector<uint64_t> > _svcTimes;
-        std::queue< std::vector<uint64_t> > _queueTimes;
-        std::queue< std::vector<uint64_t> > _sjrnTimes;
-	std::queue<std::vector<uint64_t> > _startTimes;
-        std::queue< std::vector<uint64_t> > _recvIds;
-        std::queue< std::vector<uint64_t> > _genTimes;
+        //choose not to use these anymore even if using dynamic QPS
+        //because generation time is recorded
+        
+ //        std::queue< std::vector<uint64_t> > _svcTimes;
+ //        std::queue< std::vector<uint64_t> > _queueTimes;
+ //        std::queue< std::vector<uint64_t> > _sjrnTimes;
+	// std::queue<std::vector<uint64_t> > _startTimes;
+ //        std::queue< std::vector<uint64_t> > _recvIds;
+ //        std::queue< std::vector<uint64_t> > _genTimes;
 
 
-        std::queue<double> QPSSequence;
+        // std::queue<double> QPSSequence;
 
         void _startRoi();
 

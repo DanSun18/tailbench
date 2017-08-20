@@ -121,59 +121,59 @@ return dumped;
 }
 
 Request* Client::startReq() {
-if (status == INIT) {
-pthread_barrier_wait(&barrier); // Wait for all threads to start up
+    if (status == INIT) {
+        pthread_barrier_wait(&barrier); // Wait for all threads to start up
 
-pthread_mutex_lock(&lock);
+        pthread_mutex_lock(&lock);
 
-if (!dist) {
+        if (!dist) {
 
-    uint64_t curNs = getCurNs();
-    dist = new ExpDist(lambda, seed, curNs);
+        uint64_t curNs = getCurNs();
+        dist = new ExpDist(lambda, seed, curNs);
 
-    status = WARMUP;
-    pthread_barrier_destroy(&barrier);
-    pthread_barrier_init(&barrier, nullptr, nthreads);
-}
-//dqpsLookup.setStartingNs();
-pthread_mutex_unlock(&lock);
-pthread_barrier_wait(&barrier);
-}
-
-pthread_mutex_lock(&lock);
-
-if(status == ROI)
-{
-double newQPS = dqpsLookup.currentQPS();
-if(newQPS > 0 && current_qps!= newQPS)
-{
-    // std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
-    if(!sjrnTimes.empty())
-    {
-	QPSSequence.push(current_qps);
-	_sjrnTimes.push(sjrnTimes);
-	_svcTimes.push(svcTimes);
-	_queueTimes.push(queueTimes);
-	_startTimes.push(startTimes);
-        _recvIds.push(recvIds);
-        _genTimes.push(genTimes);
-
-        sjrnTimes.clear();
-        svcTimes.clear();
-        queueTimes.clear();
-        recvIds.clear();
-	startTimes.clear();
-        genTimes.clear();
-                // std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
-            }
-            current_qps = newQPS;
-            lambda = current_qps * 1e-9;
-            delete dist;
-            uint64_t curNs = getCurNs();
-            dist = new ExpDist(lambda,seed,curNs);
+        status = WARMUP;
+        pthread_barrier_destroy(&barrier);
+        pthread_barrier_init(&barrier, nullptr, nthreads);
         }
+        //dqpsLookup.setStartingNs();
+        pthread_mutex_unlock(&lock);
+        pthread_barrier_wait(&barrier);
     }
-    
+
+    pthread_mutex_lock(&lock);
+
+    if(status == ROI)
+    {
+        double newQPS = dqpsLookup.currentQPS();
+        if(newQPS > 0 && current_qps!= newQPS)
+        {
+     //    // std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
+     //    if(!sjrnTimes.empty())
+     //    {
+    	// QPSSequence.push(current_qps);
+    	// _sjrnTimes.push(sjrnTimes);
+    	// _svcTimes.push(svcTimes);
+    	// _queueTimes.push(queueTimes);
+    	// _startTimes.push(startTimes);
+     //        _recvIds.push(recvIds);
+     //        _genTimes.push(genTimes);
+
+     //        sjrnTimes.clear();
+     //        svcTimes.clear();
+     //        queueTimes.clear();
+     //        recvIds.clear();
+    	// startTimes.clear();
+     //        genTimes.clear();
+     //                // std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
+     //            }
+                current_qps = newQPS;
+                lambda = current_qps * 1e-9;
+                delete dist;
+                uint64_t curNs = getCurNs();
+                dist = new ExpDist(lambda,seed,curNs);
+            }
+        }
+        
 
     Request* req = new Request();
     size_t len = tBenchClientGenReq(&req->data);
@@ -214,9 +214,12 @@ void Client::finiReq(Response* resp) {
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
-	startTimes.push_back(resp->startNs);
+	    startTimes.push_back(resp->startNs);
         recvIds.push_back(resp->id);
         genTimes.push_back(genTime);
+        sktWrites.push_back(resp->bytesWritten);
+        sktReads.push_back(resp->bytesRead);
+        retiredInstrs.push_back(resp->instr);
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
@@ -272,39 +275,39 @@ void Client::dumpAllStats() {
 		pthread_mutex_unlock(&lock);
 		return;
 	}
-	int intervals = QPSSequence.size();
-    std::cout << "[Client] " << intervals + 1 << " QPS intervals are detected\n";
+	// int intervals = QPSSequence.size();
+    // std::cout << "[Client] " << intervals + 1 << " QPS intervals are detected\n";
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
-	for(int i = 0; i < intervals ; i++)
-	{
-		// out << "QPS = " << QPSSequence.front() << '\n';
-		QPSSequence.pop();
-    	int reqs = _sjrnTimes.front().size();
-    	for (int r = 0; r < reqs; ++r) {
-        out << (_recvIds.front())[r];
-        out << ' ';
-        out << (_genTimes.front())[r];
-        out << ' ';
-        out<<(_queueTimes.front())[r];
-		out<<' ';
-		out<<(_svcTimes.front())[r];
-	        out<<' ';
-	        out<<(_sjrnTimes.front())[r];
-		out<<' ';
-		out <<(_startTimes.front())[r];
-	        out<<'\n';
-   		}
-        _recvIds.pop();
-        _genTimes.pop();
-   		_queueTimes.pop();
-   		_svcTimes.pop();
-   		_sjrnTimes.pop();
-                _startTimes.pop();
-	}
-    //dumping the last QPS interval without putting it into the queue
-    // out << "QPS = " << current_qps << '\n';
-    QPSSequence.pop();
-    int reqs = sjrnTimes.size();
+	// for(int i = 0; i < intervals ; i++)
+	// {
+	// 	// out << "QPS = " << QPSSequence.front() << '\n';
+	// 	QPSSequence.pop();
+ //    	int reqs = _sjrnTimes.front().size();
+ //    	for (int r = 0; r < reqs; ++r) {
+ //        out << (_recvIds.front())[r];
+ //        out << ' ';
+ //        out << (_genTimes.front())[r];
+ //        out << ' ';
+ //        out<<(_queueTimes.front())[r];
+	// 	out<<' ';
+	// 	out<<(_svcTimes.front())[r];
+	//         out<<' ';
+	//         out<<(_sjrnTimes.front())[r];
+	// 	out<<' ';
+	// 	out <<(_startTimes.front())[r];
+	//         out<<'\n';
+ //   		}
+ //        _recvIds.pop();
+ //        _genTimes.pop();
+ //   		_queueTimes.pop();
+ //   		_svcTimes.pop();
+ //   		_sjrnTimes.pop();
+ //                _startTimes.pop();
+	// }
+ //    //dumping the last QPS interval without putting it into the queue
+ //    // out << "QPS = " << current_qps << '\n';
+ //    QPSSequence.pop();
+    int reqs = recvIds.size();
     for (int r = 0; r < reqs; ++r) {
            // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
            //             sizeof(queueTimes[r]));
@@ -321,8 +324,14 @@ void Client::dumpAllStats() {
         out << svcTimes[r];
         out << ' ';
         out << sjrnTimes[r];
-	out << ' ';
-	out << startTimes[r];
+	    out << ' ';
+	    out << startTimes[r];
+        out << ' ';
+        out << retiredInstrs[r];
+        out << ' ';
+        out << bytesRead[r];
+        out << ' ';
+        out << bytesWritten[r];
         out << '\n';
     }
     out.close();

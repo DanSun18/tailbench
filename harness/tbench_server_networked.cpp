@@ -57,6 +57,17 @@
 #include "../IntelPerformanceCounterMonitorV2.8/utils.h"
 
 /*******************************************************************************
+ * helper functions
+ *******************************************************************************/
+DWORD getCurrentProcessorNumber(void)
+{
+    _asm {mov eax, 1}
+    _asm {cpuid}
+    _asm {shr ebx, 24}
+    _asm {mov eax, ebx}
+}
+
+/*******************************************************************************
  * NetworkedServer
  *******************************************************************************/
 NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
@@ -69,12 +80,8 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     reqbuf = new Request[nthreads]; 
 
     activeFds.resize(nthreads);
-    cstates1.resize(nthreads);
-    cstates2.resize(nthreads);
-    sktstate1.resize(nthreads);
-    sktstate2.resize(nthreads);
-    sstate1.resize(nthreads);
-    sstate2.resize(nthreads);
+    cstates.resize(nthreads);
+    sktstates.resize(nthreads);
     recvClientHead = 0;
 
     // Get address info
@@ -255,7 +262,15 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         reqInfo[id].id = req->id;
         reqInfo[id].startNs = curNs;
         activeFds[id] = fd;
-
+        // When start to process each request, note down counter states with performance counter
+        //find out core id current thread is on
+        unsigned int coreID = getCurrentProcessorNumber();
+        unsigned int socketID = 1; //it would be better for the thread to figure this out too
+                            //but now using constant assuming it's always going to be 1
+        core_state = pcm->getCoreCounterState(coreID);
+        socket_state = pcm->getSocketCounterState(socketID);
+        cstates[id] = core_state;
+        sktstates[id] = socket_state;
         *data = reinterpret_cast<void*>(&req->data);
     }
 
@@ -274,10 +289,31 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     resp->len = len;
     memcpy(reinterpret_cast<void*>(&resp->data), data, len);
 
+    
+
+    // finishing up request, find counter parameters
+        //find out core id current thread is on
+        unsigned int coreID = getCurrentProcessorNumber();
+        unsigned int socketID = 1; //it would be better for the thread to figure this out too
+                            //but now using constant assuming it's always going to be 1
+        core_state = pcm->getCoreCounterState(coreID);
+        socket_state = pcm->getSocketCounterState(socketID);
+        unsigned long int instr = getInstructionsRetired(cstates[id], core_state);
+        unsigned long int bytesRead = getBytesReadFromMC(sktstates[id], socket_state);
+        unsigned long int bytesWritten = getBytesWrittenToMC(sktstates[id], socket_state);
+
+
     uint64_t curNs = getCurNs();
     assert(curNs > reqInfo[id].startNs);
     resp->svcNs = curNs - reqInfo[id].startNs;
     resp->startNs = reqInfo[id].startNs;
+
+    resp->instr = instr;
+    resp->bytesRead = bytesRead;
+    resp->bytesWritten = bytesWritten;
+    
+
+
     int fd = activeFds[id];
     int totalLen = sizeof(Response) - MAX_RESP_BYTES + len;
     int sent = sendfull(fd, reinterpret_cast<const char*>(resp), totalLen, 0);

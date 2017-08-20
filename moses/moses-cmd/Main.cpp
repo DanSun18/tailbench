@@ -612,7 +612,7 @@ int main(int argc, char** argv)
       ofstream* weightsOut = new std::ofstream;
       stringstream weightsFilename;
       if (staticData.GetParam("output-search-graph-hypergraph").size() > 3) { 
-	weightsFilename << staticData.GetParam("output-search-graph-hypergraph")[3];
+	       weightsFilename << staticData.GetParam("output-search-graph-hypergraph")[3];
       } else {
 	string nbestFile = staticData.GetNBestFilePath();
 	if ( ! nbestFile.empty() && nbestFile!="-" && !boost::starts_with(nbestFile,"/dev/stdout") ) {
