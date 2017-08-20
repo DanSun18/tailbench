@@ -28,6 +28,20 @@
 #include <unordered_map>
 #include <vector>
 
+// for Intel PCM
+#include <unistd.h>
+#include <signal.h>   // for atexit()
+#include <sys/time.h> // for gettimeofday()
+#include <math.h>
+#include <iomanip>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <cstring>
+#include <sstream>
+#include <assert.h>
+#include "../IntelPerformanceCounterMonitorV2.8/cpucounters.h"
+#include "../IntelPerformanceCounterMonitorV2.8/utils.h"
 class Server {
     protected:
         struct ReqInfo {
