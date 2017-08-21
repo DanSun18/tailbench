@@ -5,6 +5,8 @@ CXX = g++
 CXXFLAGS = -O3 -g -fPIC -std=c++0x
 COMMON_INCLUDES = dist.h helpers.h msgs.h
 
+PCM_FOLDER = ../IntelPerformanceCounterMonitorV2.8
+
 default: client.o tbench_server_integrated.o tbench_server_networked.o \
 	tbench_client_networked.o tbench.jar
 
@@ -16,8 +18,10 @@ tbench_server_integrated.o : tbench_server_integrated.cpp tbench_server.h \
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 tbench_server_networked.o : tbench_server_networked.cpp tbench_server.h \
-	server.h $(COMMON_INCLUDES)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	server.h $(COMMON_INCLUDES) \
+	$(PCM_FOLDER)/msr.cpp $(PCM_FOLDER)/cpucounters.cpp $(PCM_FOLDER)/pci.cpp \
+	client_bw.cpp utils.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -pthread -lrt
 
 tbench_client_networked.o : tbench_client_networked.cpp tbench_client.h \
 	server.h client.h $(COMMON_INCLUDES)
