@@ -1,0 +1,36 @@
+Date: 07/01/2017
+
+Description: I am going to run server characterization with 2 threads for server again. This time, I wil use htop to monitor CPU% usage and memory usage of servers when they are stablized, and record the approxiamte value.
+
+setup:
+core are labeled from 0
+htop on core 4
+serverCharacterization on core 6
+
+NTHREAD_SERVER=2
+CORES_SERVER=21-23
+
+NTHREAD_CLIENT=1
+CORES_CLIENT=9-11
+
+OBSERVATION:
+QPS %CPU %MEM
+100 20 0.1
+150 25 0.1
+200 30 0.1
+250 37 0.1
+300 42 0.1
+350 49 0.1
+400 53 0.1
+450 58 0.1
+500 60 0.1
+550 65 0.1
+600 70 0.1
+650 73 0.1
+700 77 0.1
+750 80 0.1
+800 83 0.1
+850 83 0.1
+900 87 0.1
+950 89 0.1
+1000 91 0.1

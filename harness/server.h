@@ -28,6 +28,23 @@
 #include <unordered_map>
 #include <vector>
 
+// for Intel PCM
+#include <unistd.h>
+#include <signal.h>   // for atexit()
+#include <sys/time.h> // for gettimeofday()
+#include <math.h>
+#include <iomanip>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <cstring>
+#include <sstream>
+#include <assert.h>
+#include "../IntelPerformanceCounterMonitorV2.8/cpucounters.h"
+#include "../IntelPerformanceCounterMonitorV2.8/utils.h"
+
+PCM * pcm;
+
 class Server {
     protected:
         struct ReqInfo {
@@ -65,12 +82,16 @@ class NetworkedServer : public Server {
     private:
         pthread_mutex_t sendLock;
         pthread_mutex_t recvLock;
+        pthread_mutex_t pcmLock;
 
         Request *reqbuf; // One for each server thread
 
         std::vector<int> clientFds;
         std::vector<int> activeFds; // Currently active client fds for 
                                     // each thread
+        //state1 stores counter state when start processing request, socket 2 store when finishing
+        std::vector<CoreCounterState> cstates;
+        std::vector<SocketCounterState> sktstates;
         size_t recvClientHead; // The idx of the client at the 'head' of the 
                                // receive queue. We start with this idx and go
                                // down the list of eligible fds to receive from.

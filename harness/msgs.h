@@ -36,6 +36,12 @@ struct Response {
     ResponseType type;
     uint64_t id;
     uint64_t svcNs;
+    uint64_t startNs;
+    unsigned long int instr;
+    unsigned long int bytesRead;
+    unsigned long int bytesWritten;
+    unsigned long int L3MissNum;
+    unsigned long int L3HitRate;
     size_t len;
     char data[MAX_RESP_BYTES];
 };

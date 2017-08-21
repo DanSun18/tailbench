@@ -1,0 +1,38 @@
+#!/bin/bash
+
+DATE=$4
+THREAD=$1
+SERVER_CORES=$2
+CLIENT_CORE=$3
+DATAFILE=data_base/$DATE
+LOGFILE=$DATAFILE/moses.log
+ANALYSISFILE=$DATAFILE/moses.analysis
+RATIO=$5
+TIMEFILE=$DATAFILE/time
+
+mkdir $DATAFILE
+echo -e "THREAD =" $THREAD "\nSERVER_CORES =" $SERVER_CORES "\nCLIENT_CORE =" $CLIENT_CORE | tee -a $LOGFILE
+
+for TBENCH_QPS in {100..1000..100}
+do
+	echo -e "TBENCH_QPS =" $TBENCH_QPS | tee -a $LOGFILE
+	MAX_QPS=$(($RATIO * $TBENCH_QPS))
+	WARMUPQPS=$((2 * $TBENCH_QPS))
+	echo -e "MAX_QPS =" $MAX_QPS | tee -a $LOGFILE
+	echo -e "TBENCH_WARMUPQPS =" $WARMUPQPS | tee -a $LOGFILE
+	STARTTIME=$(date +%s%N)
+	./run_networked.sh $THREAD $MAX_QPS $SERVER_CORES $TBENCH_QPS $CLIENT_CORE $WARMUPQPS 2>&1 | tee -a $LOGFILE
+	ENDTIME=$(date +%s%N)
+	cp lats.bin $DATAFILE/D$THREAD$TBENCH_QPS
+	echo -e '\n' | tee -a $LOGFILE
+	EXECUTIONTIME=$(( $ENDTIME - $STARTTIME ))
+	echo $TREAD $TBENCH_QPS $STARTTIME $ENDTIME $EXECUTIONTIME | tee -a $TIMEFILE 
+done
+
+echo -e "\n\n\n Analysis:" | tee -a  $ANALYSISFILE	
+for TBENCH_QPS in {100..1000..100}
+do
+	echo -e D$THREAD$TBENCH_QPS : | tee -a $ANALYSISFILE
+	./parselatsbin.py $DATAFILE/D$THREAD$TBENCH_QPS | tee -a $ANALYSISFILE
+	echo -e '\n' | tee -a $ANALYSISFILE
+done

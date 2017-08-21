@@ -9,6 +9,7 @@ alias tbench_server_networked_objs : $(TBENCH_PATH)/tbench_server_networked.o ;
 
 alias tbench_client_networked_objs : $(TBENCH_PATH)/client.o $(TBENCH_PATH)/tbench_client_networked.o ../moses-cmd//client.o ;
 
+
 obj client.o : Client.cpp ;
 
 exe moses_integrated : Main.cpp deps tbench_integrated_objs client.o ;

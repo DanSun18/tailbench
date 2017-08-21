@@ -41,6 +41,9 @@
 #include <sstream>
 #include <string>
 
+#include <sched.h> //for sched_getcpu
+
+
 /*******************************************************************************
  * NetworkedServer
  *******************************************************************************/
@@ -50,11 +53,13 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
 {
     pthread_mutex_init(&sendLock, nullptr);
     pthread_mutex_init(&recvLock, nullptr);
+    pthread_mutex_init(&pcmLock, nullptr);
 
     reqbuf = new Request[nthreads]; 
 
     activeFds.resize(nthreads);
-
+    cstates.resize(nthreads);
+    sktstates.resize(nthreads);
     recvClientHead = 0;
 
     // Get address info
@@ -165,6 +170,8 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
     return success;
 }
 
+
+//arguments: id is thread id
 size_t NetworkedServer::recvReq(int id, void** data) {
     pthread_mutex_lock(&recvLock);
 
@@ -225,12 +232,26 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         std::cerr << "All clients exited. Server finishing" << std::endl;
         exit(0);
     } else {
+        // When start to process each request, note down counter states with performance counter
+        //find out core id current thread is on
+        
+        unsigned int coreID = sched_getcpu();
+        unsigned int socketID = 1; //it would be better for the thread to figure this out too
+                            //but now using constant assuming it's always going to be 1
+        pthread_mutex_lock(&pcmLock);
+        CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+        SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
+        pthread_mutex_unlock(&pcmLock);
+        cstates[id] = core_state;
+        sktstates[id] = socket_state;
+        *data = reinterpret_cast<void*>(&req->data);
+
+
         uint64_t curNs = getCurNs();
         reqInfo[id].id = req->id;
         reqInfo[id].startNs = curNs;
         activeFds[id] = fd;
-
-        *data = reinterpret_cast<void*>(&req->data);
+        
     }
 
     pthread_mutex_unlock(&recvLock);
@@ -251,6 +272,32 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     uint64_t curNs = getCurNs();
     assert(curNs > reqInfo[id].startNs);
     resp->svcNs = curNs - reqInfo[id].startNs;
+    resp->startNs = reqInfo[id].startNs;
+
+    // finishing up request, find counter parameters
+      //find out core id current thread is on
+    unsigned int coreID = sched_getcpu();
+    unsigned int socketID = 1; //it would be better for the thread to figure this out too
+                           //but now using constant assuming it's always going to be 1
+    pthread_mutex_lock(&pcmLock);
+    CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+    SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
+    pthread_mutex_unlock(&pcmLock);
+    unsigned long int instr = getInstructionsRetired(cstates[id], core_state);
+    unsigned long int bytesRead = getBytesReadFromMC(sktstates[id], socket_state);
+    unsigned long int bytesWritten = getBytesWrittenToMC(sktstates[id], socket_state);
+    unsigned long int L3Miss = getL3CacheMisses(cstates[id], core_state);
+    unsigned long int L3HitRatio = getL3CacheHitRatio(cstates[id], core_state);
+
+    
+
+    resp->instr = instr;
+    resp->bytesRead = bytesRead;
+    resp->bytesWritten = bytesWritten;
+    resp->L3MissNum = L3Miss;
+    resp->L3HitRate = L3HitRatio;
+    
+
 
     int fd = activeFds[id];
     int totalLen = sizeof(Response) - MAX_RESP_BYTES + len;
@@ -308,15 +355,43 @@ __thread int tid;
 std::atomic_int curTid;
 NetworkedServer* server;
 
+
+
+
+
 /*******************************************************************************
  * API
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
+    std::cout << "----------PCM Starting----------" << '\n'; 
+    pcm = PCM::getInstance();
+    PCM::ErrorCode status = pcm->program();
+    switch (status)
+    {
+    case PCM::Success:
+        break;
+    case PCM::MSRAccessDenied:
+        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (no MSR or PCI CFG space access)." << std::endl;
+        exit(EXIT_FAILURE);
+    case PCM::PMUBusy:
+        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Performance Monitoring Unit is occupied by other application). Try to stop the application that uses PMU." << std::endl;
+        std::cerr << "Alternatively you can try running Intel PCM with option -r to reset PMU configuration at your own risk." << std::endl;
+        exit(EXIT_FAILURE);
+    default:
+        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::cerr << "\nDetected " << pcm->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << pcm->getUArchCodename() << "\"" << std::endl;
+    
+    const int cpu_model = pcm->getCPUModel();
+    std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;
     std::string serverurl = getOpt<std::string>("TBENCH_SERVER", "");
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 7000);
     int nclients = getOpt<int>("TBENCH_NCLIENTS", 1);
+    // std::cout << "TESTING: " << nthreads << " threads for server are detected\n";
     server = new NetworkedServer(nthreads, serverurl, serverport, nclients);
+    std::cout << "----------Server Started----------" << '\n';
 }
 
 void tBenchServerThreadStart() {

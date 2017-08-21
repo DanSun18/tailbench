@@ -27,9 +27,43 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
- #include "dynamic_qps_lookup.h"
+// #include "dynamic_qps_lookup.h"
+
+
+#include <stdlib.h>
+#include <inttypes.h>
+//#include <stdint.h>
+#include <queue>
+//#include <string>
 
 enum ClientStatus { INIT, WARMUP, ROI, FINISHED };
+
+
+
+
+class QPScombo{
+    private:
+        uint64_t duration;
+        double QPS;
+    public:
+        QPScombo(uint64_t dur, double _QPS){
+            duration = dur;
+            QPS = _QPS;
+        }
+        double getQPS(){return QPS;}
+        uint64_t getDuration(){return duration;}
+};
+
+class DQPSLookup{
+    private:
+        std::queue<QPScombo*> QPStiming;
+        uint64_t startingNs; //starting time of the current QPS period
+        bool started;
+    public:
+        DQPSLookup(std::string inputFile);
+        double currentQPS();
+        void setStartingNs();
+};
 
 class Client {
     protected:
@@ -42,6 +76,7 @@ class Client {
         uint64_t minSleepNs;
         uint64_t seed;
         double lambda;
+        double current_qps;
         ExpDist* dist;
 
         uint64_t startedReqs;
@@ -50,11 +85,31 @@ class Client {
         std::vector<uint64_t> svcTimes;
         std::vector<uint64_t> queueTimes;
         std::vector<uint64_t> sjrnTimes;
+	    std::vector<uint64_t> startTimes; //start time of service
+        std::vector<uint64_t> recvIds;
+        std::vector<uint64_t> genTimes;
+        std::vector<uint64_t> sktWrites;
+        std::vector<uint64_t> sktReads;
+        std::vector<uint64_t> retiredInstrs;
+        std::vector<uint64_t> L3Misses;
+        std::vector<uint64_t> L3HitRates;
+        //choose not to use these anymore even if using dynamic QPS
+        //because generation time is recorded
+        
+ //        std::queue< std::vector<uint64_t> > _svcTimes;
+ //        std::queue< std::vector<uint64_t> > _queueTimes;
+ //        std::queue< std::vector<uint64_t> > _sjrnTimes;
+	// std::queue<std::vector<uint64_t> > _startTimes;
+ //        std::queue< std::vector<uint64_t> > _recvIds;
+ //        std::queue< std::vector<uint64_t> > _genTimes;
+
+
+        // std::queue<double> QPSSequence;
 
         void _startRoi();
 
         DQPSLookup dqpsLookup;
-
+	bool dumped;
 
 
     public:
@@ -65,7 +120,9 @@ class Client {
 
         void startRoi();
         void dumpStats();
-
+        void dumpAllStats();
+	
+	bool getDumped();
 };
 
 class NetworkedClient : public Client {

@@ -1,0 +1,458 @@
+THREAD = 2 
+SERVER_CORES = 12 
+CLIENT_CORE = 0,1
+TBENCH_QPS = 100 
+
+MAX_QPS = 3000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (20946) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 200 
+
+MAX_QPS = 6000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (20976) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 300 
+
+MAX_QPS = 9000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (21009) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 400 
+
+MAX_QPS = 12000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (21198) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 500 
+
+MAX_QPS = 15000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (21266) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 600 
+
+MAX_QPS = 18000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (21425) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 700 
+
+MAX_QPS = 21000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21456) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 800 
+
+MAX_QPS = 24000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21505) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 900 
+
+MAX_QPS = 27000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21541) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1000 
+
+MAX_QPS = 30000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21574) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1100 
+
+MAX_QPS = 33000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21612) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1200 
+
+MAX_QPS = 36000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21774) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1300 
+
+MAX_QPS = 39000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21809) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1400 
+
+MAX_QPS = 42000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (21875) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1500 
+
+MAX_QPS = 45000 
+
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+send() failed: Connection reset by peer
+moses_server_networked: tbench_server_networked.cpp:252: virtual void NetworkedServer::sendResp(int, const void*, size_t): Assertion `sent == totalLen' failed.
+./kill_networked.sh: line 4: kill: (22107) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+
+
+
+ Analysis:
+
+D2100 :
+95 percentile service time: 2.540686
+
+95 percentile latency time: 65.54381
+
+
+
+D2200 :
+95 percentile service time: 1.923692
+
+95 percentile latency time: 534.018508
+
+
+
+D2300 :
+95 percentile service time: 1.763265
+
+95 percentile latency time: 1316.652296
+
+
+
+D2400 :
+95 percentile service time: 1.688169
+
+95 percentile latency time: 1770.710226
+
+
+
+D2500 :
+95 percentile service time: 1.68754
+
+95 percentile latency time: 2449.038935
+
+
+
+D2600 :
+95 percentile service time: 1.66814
+
+95 percentile latency time: 2802.611331
+
+
+
+D2700 :
+95 percentile service time: 1.641094
+
+95 percentile latency time: 3263.179553
+
+
+
+D2800 :
+95 percentile service time: 1.627403
+
+95 percentile latency time: 6568.188676
+
+
+
+D2900 :
+95 percentile service time: 1.632874
+
+95 percentile latency time: 10887.629597
+
+
+
+D21000 :
+95 percentile service time: 1.621718
+
+95 percentile latency time: 14897.580628
+
+
+
+D21100 :
+95 percentile service time: 1.608201
+
+95 percentile latency time: 18415.536884
+
+
+
+D21200 :
+95 percentile service time: 1.601558
+
+95 percentile latency time: 22172.088818
+
+
+
+D21300 :
+95 percentile service time: 1.599497
+
+95 percentile latency time: 26395.539344
+
+
+
+D21400 :
+95 percentile service time: 1.627471
+
+95 percentile latency time: 30907.465118
+
+
+
+D21500 :
+95 percentile service time: 1.610015
+
+95 percentile latency time: 34475.002183
+
+
+

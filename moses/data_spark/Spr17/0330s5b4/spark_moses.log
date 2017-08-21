@@ -1,0 +1,45 @@
+THREAD = 
+BATCHCORES = 6-9,30-33 
+CLIENT_CORE =
+TBENCH_QPS = 100
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 200
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 300
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 400
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = numExamples = 2458285.
+--------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 500
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 600
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 700
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 800
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 900
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 1000
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = numExamples = 2458285.
+--------------------------------------running finished------------------------------------------------
+
+

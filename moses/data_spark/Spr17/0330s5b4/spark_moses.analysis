@@ -1,0 +1,54 @@
+
+
+
+ Analysis:
+lats_12_kmeans_6-9,30-33_100 :
+95 percentile service time: 3.851193
+95 percentile latency time: 41.149808
+
+
+lats_12_kmeans_6-9,30-33_200 :
+95 percentile service time: 3.799085
+95 percentile latency time: 66.368116
+
+
+lats_12_kmeans_6-9,30-33_300 :
+95 percentile service time: 3.339863
+95 percentile latency time: 67.218166
+
+
+lats_12_kmeans_6-9,30-33_400 :
+95 percentile service time: 2.958617
+95 percentile latency time: 305.806351
+
+
+lats_12_kmeans_6-9,30-33_500 :
+95 percentile service time: 2.569333
+95 percentile latency time: 678.41697
+
+
+lats_12_kmeans_6-9,30-33_600 :
+95 percentile service time: 2.394756
+95 percentile latency time: 901.676673
+
+
+lats_12_kmeans_6-9,30-33_700 :
+95 percentile service time: 2.409147
+95 percentile latency time: 1022.1932
+
+
+lats_12_kmeans_6-9,30-33_800 :
+95 percentile service time: 2.24032
+95 percentile latency time: 1382.49439
+
+
+lats_12_kmeans_6-9,30-33_900 :
+95 percentile service time: 2.289554
+95 percentile latency time: 1568.196273
+
+
+lats_12_kmeans_6-9,30-33_1000 :
+95 percentile service time: 2.103307
+95 percentile latency time: 1644.070383
+
+
