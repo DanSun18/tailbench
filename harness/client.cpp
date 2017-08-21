@@ -221,7 +221,7 @@ void Client::finiReq(Response* resp) {
         sktReads.push_back(resp->bytesRead);
         retiredInstrs.push_back(resp->instr);
         L3Misses.push_back(resp->L3MissNum);
-        L3HitRates.push_back(resp->L3HitRates);
+        L3HitRates.push_back(resp->L3HitRate);
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
