@@ -220,6 +220,8 @@ void Client::finiReq(Response* resp) {
         sktWrites.push_back(resp->bytesWritten);
         sktReads.push_back(resp->bytesRead);
         retiredInstrs.push_back(resp->instr);
+        L3Misses.push_back(resp->L3MissNum);
+        L3HitRates.push_back(resp->L3HitRates);
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
@@ -332,6 +334,10 @@ void Client::dumpAllStats() {
         out << sktReads[r];
         out << ' ';
         out << sktWrites[r];
+        out << ' ';
+        out << L3Misses[r];
+        out << ' ';
+        out << L3HitRates[r];
         out << '\n';
     }
     out.close();
