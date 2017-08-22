@@ -236,7 +236,7 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         //find out core id current thread is on
         
         unsigned int coreID = sched_getcpu();
-        unsigned int socketID = 1; //it would be better for the thread to figure this out too
+        unsigned int socketID = 0; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         pthread_mutex_lock(&pcmLock);
         CoreCounterState core_state = pcm->getCoreCounterState(coreID);
@@ -277,7 +277,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     // finishing up request, find counter parameters
       //find out core id current thread is on
     unsigned int coreID = sched_getcpu();
-    unsigned int socketID = 1; //it would be better for the thread to figure this out too
+    unsigned int socketID = 0; //it would be better for the thread to figure this out too
                            //but now using constant assuming it's always going to be 1
     pthread_mutex_lock(&pcmLock);
     CoreCounterState core_state = pcm->getCoreCounterState(coreID);
