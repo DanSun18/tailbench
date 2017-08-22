@@ -40,8 +40,8 @@
 #include <cstring>
 #include <sstream>
 #include <assert.h>
-#include "../IntelPerformanceCounterMonitorV2.8/cpucounters.h"
-#include "../IntelPerformanceCounterMonitorV2.8/utils.h"
+#include "../pcm-master/cpucounters.h"
+#include "../pcm-master/utils.h"
 
 PCM * pcm;
 
