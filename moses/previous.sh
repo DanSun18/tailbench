@@ -1,2 +1,2 @@
 #!/bin/sh
-./bjam --clean
+./bjam toolset=gcc -j32 -q
