@@ -238,6 +238,10 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         unsigned int coreID = sched_getcpu();
         unsigned int socketID = 0; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
+        //for debugging why instr and L3Miss sometimes ~= 2^64
+        std::cout << "Thread " + id + ": received request " + req->id << '\n';
+        std::cout << "\toperating on core " + coreID << '\n';
+
         pthread_mutex_lock(&pcmLock);
         CoreCounterState core_state = pcm->getCoreCounterState(coreID);
         SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
@@ -279,15 +283,30 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     unsigned int coreID = sched_getcpu();
     unsigned int socketID = 0; //it would be better for the thread to figure this out too
                            //but now using constant assuming it's always going to be 1
+
+    //for debugging why instr and L3Miss sometimes ~= 2^64
+    std::cout << "Thread " + id + ": sending response " + resp->id << '\n';
+    std::cout << "\toperating on core " + coreID << '\n';
+
+
     pthread_mutex_lock(&pcmLock);
     CoreCounterState core_state = pcm->getCoreCounterState(coreID);
     SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
     pthread_mutex_unlock(&pcmLock);
+
+    unsigned long int instrBefore = getInstructionsRetired(cstates[id]);
+    std::cout << "\tNumber of instructions on core counter before processing:" <<  + instrBefore << '\n';
+    unsigned long int instrAfter = getInstructionsRetired(core_state);
+    std::cout << "\tNumber of instructions on core counter after processing:" <<  + instrBefore << '\n';
+
+    //TODO: might need to look at L3 miss data too, but since they always occur together, for now just let them be
+
+
     unsigned long int instr = getInstructionsRetired(cstates[id], core_state);
     unsigned long int bytesRead = getBytesReadFromMC(sktstates[id], socket_state);
     unsigned long int bytesWritten = getBytesWrittenToMC(sktstates[id], socket_state);
     unsigned long int L3Miss = getL3CacheMisses(cstates[id], core_state);
-    unsigned long int L3HitRatio = getL3CacheHitRatio(cstates[id], core_state);
+    double L3HitRatio = getL3CacheHitRatio(cstates[id], core_state);
 
     
 
@@ -383,7 +402,9 @@ void tBenchServerInit(int nthreads) {
     }
     std::cerr << "\nDetected " << pcm->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << pcm->getUArchCodename() << "\"" << std::endl;
     
-    const int cpu_model = pcm->getCPUModel();
+    // const int cpu_model = pcm->getCPUModel();
+    std::cout << "---------PCM Started----------" << '\n';
+
     std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;
     std::string serverurl = getOpt<std::string>("TBENCH_SERVER", "");
