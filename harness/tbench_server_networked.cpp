@@ -239,8 +239,8 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         unsigned int socketID = 0; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         //for debugging why instr and L3Miss sometimes ~= 2^64
-        std::cout << "Thread " + id + ": received request " + req->id << '\n';
-        std::cout << "\toperating on core " + coreID << '\n';
+        std::cout << std::string("Thread ") << id << std::string(": received request ") << req->id << '\n';
+        std::cout << "\toperating on core " << coreID << '\n';
 
         pthread_mutex_lock(&pcmLock);
         CoreCounterState core_state = pcm->getCoreCounterState(coreID);
@@ -285,8 +285,8 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
                            //but now using constant assuming it's always going to be 1
 
     //for debugging why instr and L3Miss sometimes ~= 2^64
-    std::cout << "Thread " + id + ": sending response " + resp->id << '\n';
-    std::cout << "\toperating on core " + coreID << '\n';
+    std::cout << "Thread " << id << ": sending response " << resp->id << '\n';
+    std::cout << "\toperating on core " <<  coreID << '\n';
 
 
     pthread_mutex_lock(&pcmLock);
@@ -295,9 +295,9 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     pthread_mutex_unlock(&pcmLock);
 
     unsigned long int instrBefore = getInstructionsRetired(cstates[id]);
-    std::cout << "\tNumber of instructions on core counter before processing:" <<  + instrBefore << '\n';
+    std::cout << "\tNumber of instructions on core counter before processing:" <<  instrBefore << '\n';
     unsigned long int instrAfter = getInstructionsRetired(core_state);
-    std::cout << "\tNumber of instructions on core counter after processing:" <<  + instrBefore << '\n';
+    std::cout << "\tNumber of instructions on core counter after processing:" <<   instrAfter << '\n';
 
     //TODO: might need to look at L3 miss data too, but since they always occur together, for now just let them be
 
