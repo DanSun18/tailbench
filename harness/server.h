@@ -83,6 +83,7 @@ class NetworkedServer : public Server {
         pthread_mutex_t sendLock;
         pthread_mutex_t recvLock;
         pthread_mutex_t pcmLock;
+        pthread_mutex_t createLock;
 
         Request *reqbuf; // One for each server thread
 
