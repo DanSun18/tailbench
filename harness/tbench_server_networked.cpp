@@ -54,7 +54,6 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     pthread_mutex_init(&sendLock, nullptr);
     pthread_mutex_init(&recvLock, nullptr);
     pthread_mutex_init(&pcmLock, nullptr);
-    pthread_mutex_init(&createLock, nullptr);
     reqbuf = new Request[nthreads]; 
 
     activeFds.resize(nthreads);
@@ -373,8 +372,8 @@ __thread int tid;
  *******************************************************************************/
 std::atomic_int curTid;
 NetworkedServer* server;
-cpu_set_t * cpuset_global;
-
+cpu_set_t cpuset_global;
+pthread_mutex_t createLock;
 
 
 
@@ -383,28 +382,32 @@ cpu_set_t * cpuset_global;
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
     //get cpu affinity of process
-    CPU_ZERO(cpuset_global);
+    std::cout << "Initiating locck for creating threads" << '\n';
+	pthread_mutex_init(&createLock, nullptr);
+	std:: cout << "ZEROing cpuset" << '\n';
+    CPU_ZERO(&cpuset_global);
 
-    if (sched_getaffinity(0, sizeof(cpu_set_t), cpuset_global) != 0){
+    if (sched_getaffinity(0, sizeof(cpu_set_t), &cpuset_global) != 0){
         std::cerr << "sched_getaffinity failed" << '\n';
         exit(1);
     }
-    cpu_set_t* thread_cpu_set;
-    CPU_ZERO(thread_cpu_set);
+    cpu_set_t thread_cpu_set;
+    CPU_ZERO(&thread_cpu_set);
 
     for (int c = 0; c < CPU_SETSIZE; ++c)
     {
-        if (CPU_ISSET(c, cpuset_global))
+        if (CPU_ISSET(c, &cpuset_global))
         {
-            CPU_SET(c, thread_cpu_set);
-            CPU_CLR(c, cpuset_global);
+            CPU_SET(c, &thread_cpu_set);
+            CPU_CLR(c, &cpuset_global);
             std::cout << "Pinning main thread to core " << c << '\n';
+		break;
         }
     }
 
     pthread_t thread;
     thread = pthread_self();
-    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), thread_cpu_set) != 0)
+    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
     {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
@@ -455,34 +458,36 @@ void tBenchServerInit(int nthreads) {
 void tBenchServerThreadStart() {
     pthread_mutex_lock(&createLock);
     tid = curTid++;
-    cpu_set_t* thread_cpu_set;
-    CPU_ZERO(thread_cpu_set);
+    cpu_set_t thread_cpu_set;
+    CPU_ZERO(&thread_cpu_set);
 
     for (int c = 0; c < CPU_SETSIZE; ++c)
     {
-        if (CPU_ISSET(c, cpuset_global))
+        if (CPU_ISSET(c, &cpuset_global))
         {
-            CPU_SET(c, thread_cpu_set);
-            CPU_CLR(c, cpuset_global);
+            CPU_SET(c, &thread_cpu_set);
+            CPU_CLR(c, &cpuset_global);
             std::cout << "Pinning server thread " << tid << " to core " << c << '\n';
-        }
+        	break;
+	}
     }
 
     pthread_t thread;
     thread = pthread_self();
-    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), thread_cpu_set) != 0)
+    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
     {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
     }
 
     unsigned int coreID = sched_getcpu();
-    std::cout << "Confirm: Main thread running on " << coreID << '\n';
+    std::cout << "Confirm: server thread " << tid << " running on " << coreID << '\n';
 
     pthread_mutex_unlock(&createLock);
 }
 
 void tBenchServerFinish() {
+	pcm->cleanup();
     server->finish();
 }
 

@@ -92,7 +92,7 @@ class Client {
         std::vector<uint64_t> sktReads;
         std::vector<uint64_t> retiredInstrs;
         std::vector<uint64_t> L3Misses;
-        std::vector<uint64_t> L3HitRates;
+        std::vector<double> L3HitRates;
         //choose not to use these anymore even if using dynamic QPS
         //because generation time is recorded
         

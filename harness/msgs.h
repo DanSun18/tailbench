@@ -41,7 +41,7 @@ struct Response {
     unsigned long int bytesRead;
     unsigned long int bytesWritten;
     unsigned long int L3MissNum;
-    unsigned long int L3HitRate;
+    double L3HitRate;
     size_t len;
     char data[MAX_RESP_BYTES];
 };
