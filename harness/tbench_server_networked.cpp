@@ -171,7 +171,7 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
 
 
 //arguments: id is thread id
-size_t NetworkedServer::recvReq(int id, void** data) {
+size_t NetworkedServer::recvReq(int id, void** data, int core) {
     pthread_mutex_lock(&recvLock);
 
     bool success = false;
@@ -234,15 +234,15 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         // When start to process each request, note down counter states with performance counter
         //find out core id current thread is on
         
-        unsigned int coreID = sched_getcpu();
+        // unsigned int coreID = sched_getcpu();
         unsigned int socketID = 0; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         //for debugging why instr and L3Miss sometimes ~= 2^64
-        std::cout << std::string("Thread ") << id << std::string(": received request ") << req->id << '\n';
-        std::cout << "\toperating on core " << coreID << '\n';
+        // std::cout << std::string("Thread ") << id << std::string(": received request ") << req->id << '\n';
+        // std::cout << "\toperating on core " << coreID << '\n';
 
         pthread_mutex_lock(&pcmLock);
-        CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+        CoreCounterState core_state = pcm->getCoreCounterState(core);
         SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
         pthread_mutex_unlock(&pcmLock);
         cstates[id] = core_state;
@@ -262,7 +262,7 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     return req->len;
 };
 
-void NetworkedServer::sendResp(int id, const void* data, size_t len) {
+void NetworkedServer::sendResp(int id, const void* data, size_t len, int core) {
     pthread_mutex_lock(&sendLock);
 
     Response* resp = new Response();
@@ -279,24 +279,24 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
 
     // finishing up request, find counter parameters
       //find out core id current thread is on
-    unsigned int coreID = sched_getcpu();
+    // unsigned int coreID = sched_getcpu();
     unsigned int socketID = 0; //it would be better for the thread to figure this out too
                            //but now using constant assuming it's always going to be 1
 
     //for debugging why instr and L3Miss sometimes ~= 2^64
-    std::cout << "Thread " << id << ": sending response " << resp->id << '\n';
-    std::cout << "\toperating on core " <<  coreID << '\n';
+    // std::cout << "Thread " << id << ": sending response " << resp->id << '\n';
+    // std::cout << "\toperating on core " <<  coreID << '\n';
 
 
     pthread_mutex_lock(&pcmLock);
-    CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+    CoreCounterState core_state = pcm->getCoreCounterState(core);
     SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
     pthread_mutex_unlock(&pcmLock);
 
     unsigned long int instrBefore = getInstructionsRetired(cstates[id]);
-    std::cout << "\tNumber of instructions on core counter before processing:" <<  instrBefore << '\n';
+    // std::cout << "\tNumber of instructions on core counter before processing:" <<  instrBefore << '\n';
     unsigned long int instrAfter = getInstructionsRetired(core_state);
-    std::cout << "\tNumber of instructions on core counter after processing:" <<   instrAfter << '\n';
+    // std::cout << "\tNumber of instructions on core counter after processing:" <<   instrAfter << '\n';
 
     //TODO: might need to look at L3 miss data too, but since they always occur together, for now just let them be
 
@@ -366,6 +366,7 @@ void NetworkedServer::finish() {
  * Per-thread State
  *******************************************************************************/
 __thread int tid;
+__thread int coreId;
 
 /*******************************************************************************
  * Global data
@@ -382,9 +383,9 @@ pthread_mutex_t createLock;
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
     //get cpu affinity of process
-    std::cout << "Initiating locck for creating threads" << '\n';
+    // std::cout << "Initiating locck for creating threads" << '\n';
 	pthread_mutex_init(&createLock, nullptr);
-	std:: cout << "ZEROing cpuset" << '\n';
+	// std:: cout << "ZEROing cpuset" << '\n';
     CPU_ZERO(&cpuset_global);
 
     if (sched_getaffinity(0, sizeof(cpu_set_t), &cpuset_global) != 0){
@@ -400,7 +401,7 @@ void tBenchServerInit(int nthreads) {
         {
             CPU_SET(c, &thread_cpu_set);
             CPU_CLR(c, &cpuset_global);
-            std::cout << "Pinning main thread to core " << c << '\n';
+            // std::cout << "Pinning main thread to core " << c << '\n';
 		break;
         }
     }
@@ -414,7 +415,7 @@ void tBenchServerInit(int nthreads) {
     }
 
     unsigned int coreID = sched_getcpu();
-    std::cout << "Confirm: Main thread running on " << coreID << '\n';
+    // std::cout << "Confirm: Main thread running on " << coreID << '\n';
     
 
 
@@ -424,6 +425,7 @@ void tBenchServerInit(int nthreads) {
 
     std::cout << "----------PCM Starting----------" << '\n'; 
     pcm = PCM::getInstance();
+    pcm->resetPMU();
     PCM::ErrorCode status = pcm->program();
     switch (status)
     {
@@ -467,7 +469,8 @@ void tBenchServerThreadStart() {
         {
             CPU_SET(c, &thread_cpu_set);
             CPU_CLR(c, &cpuset_global);
-            std::cout << "Pinning server thread " << tid << " to core " << c << '\n';
+            coreId = c;
+            // std::cout << "Pinning server thread " << tid << " to core " << c << '\n';
         	break;
 	}
     }
@@ -479,9 +482,8 @@ void tBenchServerThreadStart() {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
     }
-
-    unsigned int coreID = sched_getcpu();
-    std::cout << "Confirm: server thread " << tid << " running on " << coreID << '\n';
+    // unsigned int coreID = sched_getcpu();
+    // std::cout << "Confirm: server thread " << tid << " running on " << coreID << '\n';
 
     pthread_mutex_unlock(&createLock);
 }
@@ -492,10 +494,10 @@ void tBenchServerFinish() {
 }
 
 size_t tBenchRecvReq(void** data) {
-    return server->recvReq(tid, data);
+    return server->recvReq(tid, data, coreId);
 }
 
 void tBenchSendResp(const void* data, size_t size) {
-    return server->sendResp(tid, data, size);
+    return server->sendResp(tid, data, size, coreId);
 }
 
