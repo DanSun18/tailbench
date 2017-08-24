@@ -24,7 +24,7 @@ sed -i -e "s#@DATA_ROOT#$DATA_ROOT#g" ${DIR}/moses.ini
 
 # Launch Server
 TBENCH_MAXREQS=${TBENCH_MAXREQS} TBENCH_WARMUPREQS=${TBENCH_WARMUPREQS} TBENCH_NCLIENTS=1 \
-TBENCH_SERVER=$(hostname)\
+TBENCH_SERVER=$(hostname) \
 taskset -c ${SERVER_CORES} ${BINDIR}/moses_server_networked \
     -config ${DIR}/moses.ini \
     -input-file ${DATA_ROOT}/moses/testTerms \

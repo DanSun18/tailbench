@@ -171,7 +171,7 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
 
 
 //arguments: id is thread id
-size_t NetworkedServer::recvReq(int id, void** data, int core) {
+size_t NetworkedServer::recvReq(int id, void** data) {
     pthread_mutex_lock(&recvLock);
 
     bool success = false;
@@ -234,7 +234,7 @@ size_t NetworkedServer::recvReq(int id, void** data, int core) {
         // When start to process each request, note down counter states with performance counter
         //find out core id current thread is on
         
-        // unsigned int coreID = sched_getcpu();
+        unsigned int coreID = sched_getcpu();
         unsigned int socketID = 0; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         //for debugging why instr and L3Miss sometimes ~= 2^64
@@ -242,7 +242,7 @@ size_t NetworkedServer::recvReq(int id, void** data, int core) {
         // std::cout << "\toperating on core " << coreID << '\n';
 
         pthread_mutex_lock(&pcmLock);
-        CoreCounterState core_state = pcm->getCoreCounterState(core);
+        CoreCounterState core_state = pcm->getCoreCounterState(coreID);
         SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
         pthread_mutex_unlock(&pcmLock);
         cstates[id] = core_state;
@@ -262,7 +262,7 @@ size_t NetworkedServer::recvReq(int id, void** data, int core) {
     return req->len;
 };
 
-void NetworkedServer::sendResp(int id, const void* data, size_t len, int core) {
+void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     pthread_mutex_lock(&sendLock);
 
     Response* resp = new Response();
@@ -279,7 +279,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len, int core) {
 
     // finishing up request, find counter parameters
       //find out core id current thread is on
-    // unsigned int coreID = sched_getcpu();
+    unsigned int coreID = sched_getcpu();
     unsigned int socketID = 0; //it would be better for the thread to figure this out too
                            //but now using constant assuming it's always going to be 1
 
@@ -289,17 +289,14 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len, int core) {
 
 
     pthread_mutex_lock(&pcmLock);
-    CoreCounterState core_state = pcm->getCoreCounterState(core);
+    CoreCounterState core_state = pcm->getCoreCounterState(coreID);
     SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
     pthread_mutex_unlock(&pcmLock);
 
-    unsigned long int instrBefore = getInstructionsRetired(cstates[id]);
+    //unsigned long int instrBefore = getInstructionsRetired(cstates[id]);
     // std::cout << "\tNumber of instructions on core counter before processing:" <<  instrBefore << '\n';
-    unsigned long int instrAfter = getInstructionsRetired(core_state);
+    //unsigned long int instrAfter = getInstructionsRetired(core_state);
     // std::cout << "\tNumber of instructions on core counter after processing:" <<   instrAfter << '\n';
-
-    //TODO: might need to look at L3 miss data too, but since they always occur together, for now just let them be
-
 
     unsigned long int instr = getInstructionsRetired(cstates[id], core_state);
     unsigned long int bytesRead = getBytesReadFromMC(sktstates[id], socket_state);
@@ -366,7 +363,7 @@ void NetworkedServer::finish() {
  * Per-thread State
  *******************************************************************************/
 __thread int tid;
-__thread int coreId;
+//__thread int coreId;
 
 /*******************************************************************************
  * Global data
@@ -414,7 +411,7 @@ void tBenchServerInit(int nthreads) {
         exit(1);
     }
 
-    unsigned int coreID = sched_getcpu();
+   // unsigned int coreID = sched_getcpu();
     // std::cout << "Confirm: Main thread running on " << coreID << '\n';
     
 
@@ -469,7 +466,7 @@ void tBenchServerThreadStart() {
         {
             CPU_SET(c, &thread_cpu_set);
             CPU_CLR(c, &cpuset_global);
-            coreId = c;
+           // coreId = c;
             // std::cout << "Pinning server thread " << tid << " to core " << c << '\n';
         	break;
 	}
@@ -494,10 +491,10 @@ void tBenchServerFinish() {
 }
 
 size_t tBenchRecvReq(void** data) {
-    return server->recvReq(tid, data, coreId);
+    return server->recvReq(tid, data);
 }
 
 void tBenchSendResp(const void* data, size_t size) {
-    return server->sendResp(tid, data, size, coreId);
+    return server->sendResp(tid, data, size);
 }
 
