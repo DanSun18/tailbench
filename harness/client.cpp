@@ -217,11 +217,17 @@ void Client::finiReq(Response* resp) {
 	    startTimes.push_back(resp->startNs);
         recvIds.push_back(resp->id);
         genTimes.push_back(genTime);
+
+        #ifdef PER_REQ_MONITOR
         sktWrites.push_back(resp->bytesWritten);
         sktReads.push_back(resp->bytesRead);
         retiredInstrs.push_back(resp->instr);
         L3Misses.push_back(resp->L3MissNum);
         L3HitRates.push_back(resp->L3HitRate);
+        serverTimes.push_back(resp->serverNs);
+        serverArrivalTimes.push_back(resp->arrvNs);
+        coreIds.push_back(resp->coreId);
+        #endif
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
 
@@ -329,6 +335,7 @@ void Client::dumpAllStats() {
 	    out << ' ';
 	    out << startTimes[r];
         out << ' ';
+        #ifdef PER_REQ_MONITOR
         out << retiredInstrs[r];
         out << ' ';
         out << sktReads[r];
@@ -338,7 +345,15 @@ void Client::dumpAllStats() {
         out << L3Misses[r];
         out << ' ';
         out << L3HitRates[r];
+        out << ' ';
+        out << serverTimes[r];
+        out << ' ';
+        out << serverArrivalTimes[r];
+        out << ' ';
+        out << coreIds[r];
+        #endif
         out << '\n';
+
     }
     out.close();
 	dumped = true;

@@ -57,8 +57,10 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     reqbuf = new Request[nthreads]; 
 
     activeFds.resize(nthreads);
+    #ifdef PER_REQ_MONITOR
     cstates.resize(nthreads);
     sktstates.resize(nthreads);
+    #endif
     recvClientHead = 0;
 
     // Get address info
@@ -231,6 +233,10 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         std::cerr << "All clients exited. Server finishing" << std::endl;
         exit(0);
     } else {
+        
+        
+        #ifdef PER_REQ_MONITOR
+        uint64_t arrvNs = getCurNs();
         // When start to process each request, note down counter states with performance counter
         //find out core id current thread is on
         
@@ -247,13 +253,19 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         pthread_mutex_unlock(&pcmLock);
         cstates[id] = core_state;
         sktstates[id] = socket_state;
+        #endif
+
         *data = reinterpret_cast<void*>(&req->data);
 
-
-        uint64_t curNs = getCurNs();
+        
+        startNs = getCurNs();
         reqInfo[id].id = req->id;
-        reqInfo[id].startNs = curNs;
+        reqInfo[id].startNs = startNs;
         activeFds[id] = fd;
+
+        #ifdef PER_REQ_MONITOR
+        reqInfo[id].arrvNs = arrvNs;
+        #endif
         
     }
 
@@ -272,11 +284,13 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     resp->len = len;
     memcpy(reinterpret_cast<void*>(&resp->data), data, len);
 
-    uint64_t curNs = getCurNs();
-    assert(curNs > reqInfo[id].startNs);
-    resp->svcNs = curNs - reqInfo[id].startNs;
+    uint64_t svcFinishNs = getCurNs();
+    assert(svcFinishNs > reqInfo[id].startNs);
+    resp->svcNs = svcFinishNs - reqInfo[id].startNs;
     resp->startNs = reqInfo[id].startNs;
 
+
+    #ifdef PER_REQ_MONITOR
     // finishing up request, find counter parameters
       //find out core id current thread is on
     unsigned int coreID = sched_getcpu();
@@ -305,14 +319,17 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     double L3HitRatio = getL3CacheHitRatio(cstates[id], core_state);
 
     
-
+    resp->coreId = coreID;
     resp->instr = instr;
     resp->bytesRead = bytesRead;
     resp->bytesWritten = bytesWritten;
     resp->L3MissNum = L3Miss;
     resp->L3HitRate = L3HitRatio;
-    
-
+    uint64_t depatureNs = getCurNs();
+    assert(depatureNs > reqInfo[id].arrvNs);
+    resp->serverNs = depatureNs - reqInfo[id].arrvNs;
+    resp->arrvNs = reqInfo[id].arrvNs;
+    #endif
 
     int fd = activeFds[id];
     int totalLen = sizeof(Response) - MAX_RESP_BYTES + len;
@@ -419,7 +436,7 @@ void tBenchServerInit(int nthreads) {
     
 
 
-
+    #ifdef PER_REQ_MONITOR
     std::cout << "----------PCM Starting----------" << '\n'; 
     pcm = PCM::getInstance();
     pcm->resetPMU();
@@ -443,6 +460,7 @@ void tBenchServerInit(int nthreads) {
     
     // const int cpu_model = pcm->getCPUModel();
     std::cout << "---------PCM Started----------" << '\n';
+    #endif
 
     std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;

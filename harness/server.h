@@ -50,6 +50,9 @@ class Server {
         struct ReqInfo {
             uint64_t id;
             uint64_t startNs;
+            #ifdef PER_REQ_MONITOR
+            uint64_t arrvNs;
+            #endif
         };
 
         uint64_t finishedReqs;
@@ -82,16 +85,19 @@ class NetworkedServer : public Server {
     private:
         pthread_mutex_t sendLock;
         pthread_mutex_t recvLock;
+        #ifdef PER_REQ_MONITOR
         pthread_mutex_t pcmLock;
-
+        #endif
         Request *reqbuf; // One for each server thread
 
         std::vector<int> clientFds;
         std::vector<int> activeFds; // Currently active client fds for 
                                     // each thread
         //state1 stores counter state when start processing request, socket 2 store when finishing
+        #ifdef PER_REQ_MONITOR
         std::vector<CoreCounterState> cstates;
         std::vector<SocketCounterState> sktstates;
+        #endif
         size_t recvClientHead; // The idx of the client at the 'head' of the 
                                // receive queue. We start with this idx and go
                                // down the list of eligible fds to receive from.
