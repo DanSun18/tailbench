@@ -258,7 +258,7 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         *data = reinterpret_cast<void*>(&req->data);
 
         
-        startNs = getCurNs();
+        uint64_t startNs = getCurNs();
         reqInfo[id].id = req->id;
         reqInfo[id].startNs = startNs;
         activeFds[id] = fd;
