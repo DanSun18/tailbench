@@ -149,25 +149,7 @@ Request* Client::startReq() {
         double newQPS = dqpsLookup.currentQPS();
         if(newQPS > 0 && current_qps!= newQPS)
         {
-     //    // std::cout << "TESTING: " << "newQPS = " << newQPS << " detected\n";
-     //    if(!sjrnTimes.empty())
-     //    {
-    	// QPSSequence.push(current_qps);
-    	// _sjrnTimes.push(sjrnTimes);
-    	// _svcTimes.push(svcTimes);
-    	// _queueTimes.push(queueTimes);
-    	// _startTimes.push(startTimes);
-     //        _recvIds.push(recvIds);
-     //        _genTimes.push(genTimes);
 
-     //        sjrnTimes.clear();
-     //        svcTimes.clear();
-     //        queueTimes.clear();
-     //        recvIds.clear();
-    	// startTimes.clear();
-     //        genTimes.clear();
-     //                // std::cout << "TESTING: " << "data for qps = " << current_qps << " are pushed into queue\n"; 
-     //            }
                 current_qps = newQPS;
                 lambda = current_qps * 1e-9;
                 delete dist;
@@ -263,12 +245,7 @@ void Client::dumpStats() {
     int reqs =svcTimes.size();
     std::cerr << "generating lats.bin with req number "<<reqs<<std::endl;
     for (int r = 0; r < reqs; ++r) {
-       // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
-       //             sizeof(queueTimes[r]));
-       // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
-        //            sizeof(svcTimes[r]));
-       // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
-       //             sizeof(sjrnTimes[r]));	
+
 	out<<queueTimes[r];
 	out<<' ';
 	out<<svcTimes[r];
@@ -291,46 +268,11 @@ void Client::dumpAllStats() {
 		pthread_mutex_unlock(&lock);
 		return;
 	}
-	// int intervals = QPSSequence.size();
-    // std::cout << "[Client] " << intervals + 1 << " QPS intervals are detected\n";
+
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
-	// for(int i = 0; i < intervals ; i++)
-	// {
-	// 	// out << "QPS = " << QPSSequence.front() << '\n';
-	// 	QPSSequence.pop();
- //    	int reqs = _sjrnTimes.front().size();
- //    	for (int r = 0; r < reqs; ++r) {
- //        out << (_recvIds.front())[r];
- //        out << ' ';
- //        out << (_genTimes.front())[r];
- //        out << ' ';
- //        out<<(_queueTimes.front())[r];
-	// 	out<<' ';
-	// 	out<<(_svcTimes.front())[r];
-	//         out<<' ';
-	//         out<<(_sjrnTimes.front())[r];
-	// 	out<<' ';
-	// 	out <<(_startTimes.front())[r];
-	//         out<<'\n';
- //   		}
- //        _recvIds.pop();
- //        _genTimes.pop();
- //   		_queueTimes.pop();
- //   		_svcTimes.pop();
- //   		_sjrnTimes.pop();
- //                _startTimes.pop();
-	// }
- //    //dumping the last QPS interval without putting it into the queue
- //    // out << "QPS = " << current_qps << '\n';
- //    QPSSequence.pop();
+
     int reqs = recvIds.size();
-    for (int r = 0; r < reqs; ++r) {
-           // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
-           //             sizeof(queueTimes[r]));
-           // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
-            //            sizeof(svcTimes[r]));
-           // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
-           //             sizeof(sjrnTimes[r]));    
+    for (int r = 0; r < reqs; ++r) {  
         out << recvIds[r];
         out << ' ';
         out << genTimes[r];
