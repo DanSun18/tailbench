@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define PER_REQ_MONITOR
+
 const int MAX_REQ_BYTES = 1 << 20; // 1 MB
 const int MAX_RESP_BYTES = 1 << 20; // 1 MB
 
@@ -36,9 +38,19 @@ struct Response {
     ResponseType type;
     uint64_t id;
     uint64_t svcNs;
+    uint64_t startNs;
+    #ifdef PER_REQ_MONITOR
+    unsigned int coreId;
+    unsigned long int instr;
+    unsigned long int bytesRead;
+    unsigned long int bytesWritten;
+    unsigned long int L3MissNum;
+    double L3HitRate;
+    uint64_t serverNs;
+    uint64_t arrvNs;
+    #endif
     size_t len;
     size_t queue_len;
-    size_t req_len;
     char data[MAX_RESP_BYTES];
 };
 

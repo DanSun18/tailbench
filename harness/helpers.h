@@ -27,10 +27,15 @@
 
 template<typename T>
 static T getOpt(const char* name, T defVal) {
-    const char* opt = getenv(name);
 
+    //std::cout << "TESTING: " << "getting option" << name << '\n';
+    const char* opt = getenv(name);
+    if (!opt){
+	std::cout << name << " = " << defVal << std::endl; 
+	return defVal;
+	}
     std::cout << name << " = " << opt << std::endl;
-    if (!opt) return defVal;
+    
     std::stringstream ss(opt);
     if (ss.str().length() == 0) return defVal;
     T res;
@@ -93,5 +98,7 @@ static int recvfull(int fd, char* msg, int len, int flags) {
 
     return (len - remaining);
 }
+
+
 
 #endif

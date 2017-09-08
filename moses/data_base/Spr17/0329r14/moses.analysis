@@ -1,0 +1,54 @@
+
+
+
+ Analysis:
+D2100 :
+95 percentile service time: 6.099109
+95 percentile latency time: 11.141223
+
+
+D2200 :
+95 percentile service time: 4.40105
+95 percentile latency time: 13.496294
+
+
+D2300 :
+95 percentile service time: 3.598897
+95 percentile latency time: 9.221399
+
+
+D2400 :
+95 percentile service time: 3.442495
+95 percentile latency time: 5.830037
+
+
+D2500 :
+95 percentile service time: 3.231572
+95 percentile latency time: 5.78154
+
+
+D2600 :
+95 percentile service time: 3.072465
+95 percentile latency time: 7.612074
+
+
+D2700 :
+95 percentile service time: 2.802097
+95 percentile latency time: 38.815306
+
+
+D2800 :
+95 percentile service time: 2.507737
+95 percentile latency time: 226.483845
+
+
+D2900 :
+95 percentile service time: 2.366414
+95 percentile latency time: 296.334032
+
+
+D21000 :
+95 percentile service time: 2.167039
+95 percentile latency time: 614.618805
+
+

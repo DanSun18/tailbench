@@ -48,14 +48,34 @@ typedef struct {
     double service_time;
 } state_info_t;
 
+// for Intel PCM
+#include <unistd.h>
+#include <signal.h>   // for atexit()
+#include <sys/time.h> // for gettimeofday()
+#include <math.h>
+#include <iomanip>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <cstring>
+#include <sstream>
+#include <assert.h>
+#include "../pcm-master/cpucounters.h"
+#include "../pcm-master/utils.h"
+
+PCM * pcm;
+
 class Server {
     protected:
         struct ReqInfo {
-        uint64_t id;
-        uint64_t startNs;
-	    uint64_t Qlength;
-	    uint64_t Reqlen;
-        uint64_t RecNs; // time when the request is received at the server
+            uint64_t id;
+            uint64_t startNs;
+	       uint64_t Qlength;
+	       uint64_t Reqlen;
+            uint64_t RecNs; // time when the request is received at the server
+            #ifdef PER_REQ_MONITOR
+            uint64_t arrvNs;
+            #endif
         };
 
         uint64_t finishedReqs;
@@ -90,12 +110,19 @@ class NetworkedServer : public Server {
     private:
         pthread_mutex_t sendLock;
         pthread_mutex_t recvLock;
-
+        #ifdef PER_REQ_MONITOR
+        pthread_mutex_t pcmLock;
+        #endif
         Request *reqbuf; // One for each server thread
 
         std::vector<int> clientFds;
         std::vector<int> activeFds; // Currently active client fds for 
                                     // each thread
+        //state1 stores counter state when start processing request, socket 2 store when finishing
+        #ifdef PER_REQ_MONITOR
+        std::vector<CoreCounterState> cstates;
+        std::vector<SocketCounterState> sktstates;
+        #endif
         size_t recvClientHead; // The idx of the client at the 'head' of the 
                                // receive queue. We start with this idx and go
                                // down the list of eligible fds to receive from.

@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <csignal>
 
 void* send(void* c) {
     NetworkedClient* client = reinterpret_cast<NetworkedClient*>(c);
@@ -37,7 +38,6 @@ void* send(void* c) {
             std::cerr << "[CLIENT] send() failed : " << client->errmsg() \
                 << std::endl;
             std::cerr << "[CLIENT] Not sending further request" << std::endl;
-	    client->dumpStats();
             break; // We are done
         }
 //	std::cerr << "client finish sending request " << std::endl;
@@ -54,7 +54,6 @@ void* recv(void* c) {
         if (!client->recv(&resp)) {
             std::cerr << "[CLIENT] recv() failed : " << client->errmsg() \
                 << std::endl;
-	    client->dumpStats();
             return nullptr;
         }
        // std::cerr << "client begin to recv reach here 1" << std::endl;
@@ -65,7 +64,7 @@ void* recv(void* c) {
             client->startRoi();
 	 //   std::cerr << "reach reponse is ROI_BEGIN" << std::endl;
         } else if (resp.type == FINISH) {
-            client->dumpStats();
+            client->dumpAllStats();
             syscall(SYS_exit_group, 0);
         } else {
             std::cerr << "Unknown response type: " << resp.type << std::endl;
@@ -76,12 +75,17 @@ void* recv(void* c) {
 }
 
 int main(int argc, char* argv[]) {
+    std::cout << "----------Starting Clients----------" << '\n';
     int nthreads = getOpt<int>("TBENCH_CLIENT_THREADS", 1);
     std::string server = getOpt<std::string>("TBENCH_SERVER", "");
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 7000);
 
+    //std::cout << "TESTING: " << "finished parsing parameters\n";
+	signal(SIGPIPE, SIG_IGN);
     NetworkedClient* client = new NetworkedClient(nthreads, server, serverport);
-    signal(SIGPIPE, SIG_IGN);
+
+    std::cout << "----------NetworkedClient initiated----------" << '\n';
+
     std::vector<pthread_t> senders(nthreads);
     std::vector<pthread_t> receivers(nthreads);
 
@@ -99,14 +103,21 @@ int main(int argc, char* argv[]) {
 
     for (int t = 0; t < nthreads; ++t) {
         int status;
+//	std::cout << "[CLIENT] joining sender" << t << '\n';
         status = pthread_join(senders[t], nullptr);
         assert(status == 0);
+//	std::cout << "[CLIENT] joined sender" << t << '\n';
 
+//	std::cout << "[CLIENT] joining receiver" << t << '\n';
         status = pthread_join(receivers[t], nullptr);
         assert(status == 0);
+//	std::cout << "[CLIENT] joined receiver" << t << '\n';
     }
-
-    std::cerr << "client reach ends! " <<std::endl;
-    client->dumpStats();
+//	std::cout << "[Client] send and recv threads exited\n";
+	if(!client -> getDumped())
+	{
+		client->dumpAllStats();
+	}
+	std::cout << "----------Client exiting----------\n";
     return 0;
 }

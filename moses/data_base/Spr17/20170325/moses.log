@@ -1,0 +1,277 @@
+THREAD = 2 
+SERVER_CORES = 0-1 
+CLIENT_CORE = 12
+TBENCH_QPS = 100
+MAX_QPS = 3000
+TBENCH_WARMUPQPS = 200
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46454) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 200
+MAX_QPS = 6000
+TBENCH_WARMUPQPS = 400
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46489) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 300
+MAX_QPS = 9000
+TBENCH_WARMUPQPS = 600
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46523) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 400
+MAX_QPS = 12000
+TBENCH_WARMUPQPS = 800
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46557) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 500
+MAX_QPS = 15000
+TBENCH_WARMUPQPS = 1000
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46591) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 600
+MAX_QPS = 18000
+TBENCH_WARMUPQPS = 1200
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46624) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 700
+MAX_QPS = 21000
+TBENCH_WARMUPQPS = 1400
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+reading bin ttable
+size of OFF_T size of OFF_T 8
+8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46657) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 800
+MAX_QPS = 24000
+TBENCH_WARMUPQPS = 1600
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46691) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 900
+MAX_QPS = 27000
+TBENCH_WARMUPQPS = 1800
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46854) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+TBENCH_QPS = 1000
+MAX_QPS = 30000
+TBENCH_WARMUPQPS = 2000
+./bin
+Creating lexical reordering...
+weights: 0.000 0.000 0.000 0.000 0.000 0.000 
+binary file loaded, default OFF_T: -1
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = reading bin ttable
+size of OFF_T 8
+reading bin ttable
+size of OFF_T 8
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+binary phrasefile loaded, default OFF_T: -1
+binary file loaded, default OFF_T: -1
+Client left, removing
+All clients exited. Server finishing
+./kill_networked.sh: line 4: kill: (46889) - No such process
+rm: cannot remove 'server.pid': No such file or directory
+rm: cannot remove 'client.pid': No such file or directory
+
+
+
+
+
+ Analysis:
+D2100 :
+95 percentile service time: 4.876569
+95 percentile latency time: 6.172533
+
+
+D2200 :
+95 percentile service time: 3.731221
+95 percentile latency time: 5.665475
+
+
+D2300 :
+95 percentile service time: 3.486992
+95 percentile latency time: 5.516614
+
+
+D2400 :
+95 percentile service time: 3.365135
+95 percentile latency time: 5.45041
+
+
+D2500 :
+95 percentile service time: 3.206763
+95 percentile latency time: 5.350282
+
+
+D2600 :
+95 percentile service time: 3.008835
+95 percentile latency time: 5.930925
+
+
+D2700 :
+95 percentile service time: 2.798046
+95 percentile latency time: 6.54576
+
+
+D2800 :
+95 percentile service time: 2.555852
+95 percentile latency time: 7.213848
+
+
+D2900 :
+95 percentile service time: 2.361624
+95 percentile latency time: 10.372709
+
+
+D21000 :
+95 percentile service time: 2.184436
+95 percentile latency time: 113.548757
+
+

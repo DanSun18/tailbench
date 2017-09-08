@@ -1,0 +1,3 @@
+modified run_networked.sh to improve readibility
+wrote run_both.sh to substitute run_application1.py with bash script
+added char_server_with_spark.sh

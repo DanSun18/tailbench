@@ -1,0 +1,54 @@
+
+
+
+ Analysis:
+D1100 :
+95 percentile service time: 5.280102
+95 percentile latency time: 39.99924
+
+
+D1200 :
+95 percentile service time: 3.861208
+95 percentile latency time: 81.502958
+
+
+D1300 :
+95 percentile service time: 3.374357
+95 percentile latency time: 1163.619118
+
+
+D1400 :
+95 percentile service time: 0.599217
+95 percentile latency time: 1.120642
+
+
+D1500 :
+95 percentile service time: 0.892698
+95 percentile latency time: 2583.416836
+
+
+D1600 :
+95 percentile service time: 0.89785
+95 percentile latency time: 2956.086306
+
+
+D1700 :
+95 percentile service time: 0.879435
+95 percentile latency time: 3467.85851
+
+
+D1800 :
+95 percentile service time: 0.892998
+95 percentile latency time: 4161.986804
+
+
+D1900 :
+95 percentile service time: 0.880963
+95 percentile latency time: 4704.3484
+
+
+D11000 :
+95 percentile service time: 2.286074
+95 percentile latency time: 34993.803448
+
+

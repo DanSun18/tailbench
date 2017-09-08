@@ -1,0 +1,76 @@
+QPS: 100
+95 percentile service time: 4.316266
+95 percentile latency time: 4.927547
+
+QPS: 150
+95 percentile service time: 4.14369
+95 percentile latency time: 4.950653
+
+QPS: 200
+95 percentile service time: 4.11168
+95 percentile latency time: 5.448581
+
+QPS: 250
+95 percentile service time: 3.97037
+95 percentile latency time: 5.652617
+
+QPS: 300
+95 percentile service time: 3.869176
+95 percentile latency time: 5.716643
+
+QPS: 350
+95 percentile service time: 3.800797
+95 percentile latency time: 6.356989
+
+QPS: 400
+95 percentile service time: 3.720893
+95 percentile latency time: 6.886999
+
+QPS: 450
+95 percentile service time: 3.716858
+95 percentile latency time: 7.716032
+
+QPS: 500
+95 percentile service time: 3.667225
+95 percentile latency time: 9.036988
+
+QPS: 550
+95 percentile service time: 3.641326
+95 percentile latency time: 10.088816
+
+QPS: 600
+95 percentile service time: 3.559666
+95 percentile latency time: 11.273761
+
+QPS: 650
+95 percentile service time: 3.463473
+95 percentile latency time: 12.138326
+
+QPS: 700
+95 percentile service time: 3.383287
+95 percentile latency time: 17.682133
+
+QPS: 750
+95 percentile service time: 3.342154
+95 percentile latency time: 16.668433
+
+QPS: 800
+95 percentile service time: 3.132713
+95 percentile latency time: 16.812797
+
+QPS: 850
+95 percentile service time: 2.983318
+95 percentile latency time: 19.2466
+
+QPS: 900
+95 percentile service time: 2.864155
+95 percentile latency time: 21.857975
+
+QPS: 950
+95 percentile service time: 2.683521
+95 percentile latency time: 20.2854
+
+QPS: 1000
+95 percentile service time: 2.599837
+95 percentile latency time: 20.301569
+

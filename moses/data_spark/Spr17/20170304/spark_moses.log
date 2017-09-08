@@ -1,0 +1,107 @@
+THREAD = 
+SERVER_CORES = 
+CLIENT_CORE =
+TBENCH_QPS = 100
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 200
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 300
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 400
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 500
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 600
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 700
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 800
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 900
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+TBENCH_QPS = 1000
+numExamples = 2458285.
+TBENCH_SERVER = TBENCH_CLIENT_THREADS = --------------------------------------running finished------------------------------------------------
+
+
+
+
+
+ Analysis:
+lats_0_kmeans_1-11,25-35_100 :
+95 percentile service time: 2.489457
+95 percentile latency time: 3.079055
+
+
+lats_0_kmeans_1-11,25-35_200 :
+95 percentile service time: 1.852836
+95 percentile latency time: 2.680131
+
+
+lats_0_kmeans_1-11,25-35_300 :
+95 percentile service time: 1.747501
+95 percentile latency time: 2.661807
+
+
+lats_0_kmeans_1-11,25-35_400 :
+95 percentile service time: 1.7051
+95 percentile latency time: 2.744609
+
+
+lats_0_kmeans_1-11,25-35_500 :
+95 percentile service time: 1.667647
+95 percentile latency time: 3.046677
+
+
+lats_0_kmeans_1-11,25-35_600 :
+95 percentile service time: 1.672217
+95 percentile latency time: 10.080056
+
+
+lats_0_kmeans_1-11,25-35_700 :
+95 percentile service time: 1.669344
+95 percentile latency time: 239.814155
+
+
+lats_0_kmeans_1-11,25-35_800 :
+95 percentile service time: 1.655193
+95 percentile latency time: 534.767448
+
+
+lats_0_kmeans_1-11,25-35_900 :
+95 percentile service time: 1.685345
+95 percentile latency time: 735.96047
+
+
+lats_0_kmeans_1-11,25-35_1000 :
+95 percentile service time: 1.653826
+95 percentile latency time: 1005.435339
+
+
