@@ -200,7 +200,11 @@ void Client::finiReq(Response* resp) {
 	    startTimes.push_back(resp->startNs);
         recvIds.push_back(resp->id);
         genTimes.push_back(genTime);
+
+        #ifdef CONTROL_WITH_QLEARNING
         QueueLens.push_back(resp->queue_len);
+        #endif
+
         #ifdef PER_REQ_MONITOR
         sktWrites.push_back(resp->bytesWritten);
         sktReads.push_back(resp->bytesRead);

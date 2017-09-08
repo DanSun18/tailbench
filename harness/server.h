@@ -27,6 +27,9 @@
 
 #include <unordered_map>
 #include <vector>
+
+#ifdef CONTROL_WITH_QLEARNING
+
 #include <queue>
 #include <algorithm>
 
@@ -47,8 +50,11 @@ typedef struct {
     unsigned int Qlength;
     double service_time;
 } state_info_t;
+#endif 
 
-// for Intel PCM
+
+
+#ifdef PER_REQ_MONITOR
 #include <unistd.h>
 #include <signal.h>   // for atexit()
 #include <sys/time.h> // for gettimeofday()
@@ -64,15 +70,19 @@ typedef struct {
 #include "../pcm-master/utils.h"
 
 PCM * pcm;
+#endif
 
 class Server {
     protected:
         struct ReqInfo {
             uint64_t id;
             uint64_t startNs;
+            #ifdef CONTROL_WITH_QLEARNING
 	       uint64_t Qlength;
-	       uint64_t Reqlen;
+	        uint64_t Reqlen;
             uint64_t RecNs; // time when the request is received at the server
+           #endif
+
             #ifdef PER_REQ_MONITOR
             uint64_t arrvNs;
             #endif
@@ -129,6 +139,13 @@ class NetworkedServer : public Server {
                                // This is incremented by 1 on each go. This
                                // avoids unfairly favoring some clients over
                                // others
+        void printDebugStats() const;
+
+        // Helper Functions
+        void removeClient(int fd);
+        bool checkRecv(int recvd, int expected, int fd);
+
+        #ifdef CONTROL_WITH_QLEARNING
         int shm_fd, runLength;
         int sem_fd;
         int state_fd;
@@ -141,33 +158,33 @@ class NetworkedServer : public Server {
         const char *name = "server_info";
         const char *state_name = "state_info";
         //const char *sem_name = "sem";
-        void printDebugStats() const;
-
-        // Helper Functions
-        void removeClient(int fd);
+        
         std::queue<Request*> recvReq_Queue;
 	    std::queue<int> fd_Queue;
 	    std::queue<int> Qlen_Queue;
         std::queue<uint64_t> rectime_Queue;
         std::vector<uint64_t> latencies;
         std::vector<uint64_t> services; 
-        bool checkRecv(int recvd, int expected, int fd);
+        #endif
+
     public:
 
         NetworkedServer(int nthreads, std::string ip, int port, int nclients);
         ~NetworkedServer();
 
-        int recvReq_Q();
+        
         size_t recvReq(int id, void** data);
         void sendResp(int id, const void* data, size_t size);
         void finish();
-
+        
+        #ifdef CONTROL_WITH_QLEARNING
+        int recvReq_Q();
         //for shared memory
 
         void init_mem();
         void update_mem();
         void update_server_info(unsigned int Qlength, float service_time);
-
+        #endif
 };
 
 #endif

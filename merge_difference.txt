@@ -1,0 +1,601 @@
+
+diff --git a/harness/tbench_server_networked.cpp b/harness/tbench_server_networked.cpp
+index 0def4c6..92dd64f 100755
+--- a/harness/tbench_server_networked.cpp
++++ b/harness/tbench_server_networked.cpp
+@@ -47,12 +47,25 @@
+ /*******************************************************************************
+  * NetworkedServer
+  *******************************************************************************/
++ std::queue<Request> get_Queue() {
++    std::queue<Request> Q;
++    return Q;
++ }
++
++pthread_t* receive_thread;
++pthread_attr_t *attr;
++Request *global_req;
++
++pthread_cond_t rec_cv;
++
+ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
+         int nclients) 
+     : Server(nthreads)
+ {
+     pthread_mutex_init(&sendLock, nullptr);
+     pthread_mutex_init(&recvLock, nullptr);
++
++    pthread_cond_init(&rec_cv,nullptr);
+     pthread_mutex_init(&pcmLock, nullptr);
+     reqbuf = new Request[nthreads]; 
+ 
+@@ -62,7 +75,7 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
+     sktstates.resize(nthreads);
+     #endif
+     recvClientHead = 0;
+-
++    starttime = 0;
+     // Get address info
+     int status;
+     struct addrinfo hints;
+@@ -136,6 +149,7 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
+         }
+ 
+         clientFds.push_back(clientFd);
++        init_mem();
+     }
+ }
+ 
+@@ -171,15 +185,120 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
+     return success;
+ }
+ 
++int NetworkedServer::recvReq_Q() {
++    bool success = false;
++    Request *req = new Request;
++    int fd = -1;
++//    std::cerr << "server wants to recv req" << std::endl;
++    while(!success && clientFds.size() > 0) {
++        int maxFd = -1;
++        fd_set readSet;
++        FD_ZERO(&readSet);
++        for (int f : clientFds) {
++            FD_SET(f, &readSet);
++            if (f > maxFd) maxFd = f;
++        }
++
++        int ret = select(maxFd + 1, &readSet, nullptr, nullptr, nullptr);
++        if (ret == -1) {
++            std::cerr << "select() failed: " << strerror(errno) << std::endl;
++            exit(-1);
++        }
++
++        fd = -1;
++
++        for (size_t i = 0; i < clientFds.size(); ++i) {
++            size_t idx = (recvClientHead + i) % clientFds.size();
++            if (FD_ISSET(clientFds[idx], &readSet)) {
++                fd = clientFds[idx];
++                break;
++            }
++
++        }
++
++        recvClientHead = (recvClientHead + 1) % clientFds.size();
++
++        assert(fd != -1);
++
++        int len = sizeof(Request) - MAX_REQ_BYTES;
++
++        int recvd = recvfull(fd, reinterpret_cast<char*>(req), len, 0);
++        success = checkRecv(recvd, len, fd);
++
++        if (!success) continue;
++
++        recvd = recvfull(fd, req->data, req->len, 0);
++
++        success = checkRecv(recvd, req->len, fd);
++//	std::cerr << "receive success mark is " << success << std::endl;
++        if (!success) continue;
++
++    }
++   
++    pthread_mutex_lock(&recvLock);
++    recvReq_Queue.push(req);
++    int Qlen = recvReq_Queue.size();
++//    std::cerr << "receive req.." << recvReq_Queue.size() << std::endl;
++    fd_Queue.push(fd);
++    Qlen_Queue.push(Qlen);
++    rectime_Queue.push(getCurNs());
++    pthread_cond_signal(&rec_cv);
++    pthread_mutex_unlock(&recvLock);
++    if (clientFds.size() == 0) {
++        return 0;
++    }
++    else {
++        return 1;
++    }
++
++}
++
++
+ 
+ //arguments: id is thread id
++
+ size_t NetworkedServer::recvReq(int id, void** data) {
++  //  std::cerr << "reach here 1 " <<std::endl;
++    pthread_mutex_lock(&recvLock);
++  //  std::cerr << "reach here 2 " << recvReq_Queue.empty()<<std::endl;
++    while(recvReq_Queue.empty())
++    {
++//	std::cerr << recvReq_Queue.size() << std::endl;
++	 pthread_cond_wait(&rec_cv,&recvLock);
++    }
++ //   std::cerr << "reach here 3 " << std::endl;
++    Request *req = recvReq_Queue.front();
++    recvReq_Queue.pop();
++    
++    int fd = fd_Queue.front();
++    fd_Queue.pop();
++    int QL = Qlen_Queue.front();
++    Qlen_Queue.pop();
++    uint64_t rectime = rectime_Queue.front();
++    rectime_Queue.pop();
++    uint64_t curNs = getCurNs();
++    reqInfo[id].id = req->id;
++    reqInfo[id].startNs = curNs;
++    reqInfo[id].Qlength = QL;
++    reqInfo[id].RecNs = rectime;
++    activeFds[id] = fd;
++    *data = reinterpret_cast<void*>(req->data);
++    size_t len = req->len;
++    //reqInfo[id].reqlen = len;
++    global_req = req;
++    pthread_mutex_unlock(&recvLock);
++    return len;
++    
++}
++
++/*size_t NetworkedServer::recvReq(int id, void** data) {
+     pthread_mutex_lock(&recvLock);
+ 
+     bool success = false;
+     Request* req;
+     int fd = -1;
+     
++    //std::cerr<<"begin retreive request from client port.."<<std::endl;
+     while (!success && clientFds.size() > 0) {
+         int maxFd = -1;
+         fd_set readSet;
+@@ -189,12 +308,15 @@ size_t NetworkedServer::recvReq(int id, void** data) {
+             if (f > maxFd) maxFd = f;
+         }
+ 	
++	//std::cerr<<"reach here 1 " <<"maxfd is "<<maxFd<<std::endl;
+         int ret = select(maxFd + 1, &readSet, nullptr, nullptr, nullptr);
++	//std::cerr<<"reach here 1.5 " <<std::endl;
+         if (ret == -1) {
+             std::cerr << "select() failed: " << strerror(errno) << std::endl;
+             exit(-1);
+         }
+-
++        
++        //std::cerr<<"reach here 2 " << std::endl;
+         fd = -1;
+ 
+         for (size_t i = 0; i < clientFds.size(); ++i) {
+@@ -272,18 +394,25 @@ size_t NetworkedServer::recvReq(int id, void** data) {
+     pthread_mutex_unlock(&recvLock);
+ 
+     return req->len;
+-};
++};*/
+ 
+ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
+     pthread_mutex_lock(&sendLock);
+ 
+     Response* resp = new Response();
+     
++    if (starttime == 0)
++        starttime = getCurNs();
++    
+     resp->type = RESPONSE;
+     resp->id = reqInfo[id].id;
+     resp->len = len;
++    resp->queue_len = reqInfo[id].Qlength;
++   // resp->req_len = reqInfo[id].Reqlen;
+     memcpy(reinterpret_cast<void*>(&resp->data), data, len);
+ 
++    
++
+     uint64_t svcFinishNs = getCurNs();
+     assert(svcFinishNs > reqInfo[id].startNs);
+     resp->svcNs = svcFinishNs - reqInfo[id].startNs;
+@@ -334,10 +463,11 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
+     int fd = activeFds[id];
+     int totalLen = sizeof(Response) - MAX_RESP_BYTES + len;
+     int sent = sendfull(fd, reinterpret_cast<const char*>(resp), totalLen, 0);
++    //std::cerr << "length is " <<sent <<std::endl;
+     assert(sent == totalLen);
+ 
+     ++finishedReqs;
+-
++    //std::cerr << finishedReqs<<' '<<warmupReqs<<std::endl;
+     if (finishedReqs == warmupReqs) {
+         resp->type = ROI_BEGIN;
+         for (int fd : clientFds) {
+@@ -354,6 +484,10 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
+         }
+     }
+ 
++    latencies.push_back(svcFinishNs-reqInfo[id].RecNs);
++    services.push_back(resp->svcNs);
++    update_mem();
++
+     delete resp;
+     
+     pthread_mutex_unlock(&sendLock);
+@@ -376,6 +510,75 @@ void NetworkedServer::finish() {
+     pthread_mutex_unlock(&sendLock);
+ }
+ 
++void NetworkedServer::init_mem()
++{   
++    const int SIZE = sizeof(double);
++
++    const int STATE_SIZE = sizeof(state_info_t);
++
++    state_fd = shm_open(state_name,O_CREAT|O_RDWR,0666);
++    shm_fd = shm_open(name,O_CREAT|O_RDWR,0666);
++    //sem_fd = shm_open(sem_name,O_CREAT|O_RDWR,0666);
++    if (shm_fd == -1) {
++    printf("prod: Shared memory failed: %s\n", strerror(errno));
++    exit(1);
++    }
++
++     if(state_fd == -1) {
++    printf("prod: Shared memory failed: %s\n", strerror(errno));
++    exit(1);
++    }
++
++    ftruncate(shm_fd, SIZE);
++    ftruncate(state_fd,STATE_SIZE);
++
++    shm_base = mmap(0,SIZE,PROT_READ|PROT_WRITE,MAP_SHARED,shm_fd,0);
++    state_info_base = mmap(0,STATE_SIZE,PROT_READ|PROT_WRITE,MAP_SHARED,state_fd,0);
++
++
++
++
++
++
++}
++
++
++void NetworkedServer::update_mem()
++{
++    std::sort(latencies.begin(),latencies.end());
++   // std::sort(rectime.begin(),rectime.end());
++    unsigned len = latencies.size();
++    unsigned index = (unsigned)(len*0.95);
++    double val = (double)(latencies[index]/1000000.0);
++
++    std::sort(services.begin(),services.end());
++    len = services.size();
++    index = (unsigned)(len*0.95);
++    double maxser = (double)(services[index]/1000000.0);
++    unsigned QL = recvReq_Queue.size();
++    unsigned int curtime = getCurNs();
++
++
++    if (curtime - starttime > 5e7)
++    {
++        latencies.clear();
++        services.clear();
++        starttime = curtime;
++    }
++    //std::cerr << val << std::endl;
++    update_server_info(QL,maxser);
++    memcpy(shm_base,&val,sizeof(double));
++
++
++}
++
++
++void NetworkedServer::update_server_info(unsigned int Qlength, float service_time)
++{
++    state_info.Qlength = Qlength;
++    state_info.service_time = service_time;
++    memcpy(state_info_base,&state_info,sizeof(state_info_t));
++}
+ /*******************************************************************************
+  * Per-thread State
+  *******************************************************************************/
+@@ -516,3 +719,40 @@ void tBenchSendResp(const void* data, size_t size) {
+     return server->sendResp(tid, data, size);
+ }
+ 
++
++void* receive_thread_func(void *ptr)
++{   
++    NetworkedServer *server = (NetworkedServer*)ptr;
++    int ret_val = 1;
++
++    while(ret_val) 
++    {
++        ret_val = server->recvReq_Q();
++    }
++
++    return 0;
++}
++
++void tBenchSetup_thread()
++{
++    receive_thread = new pthread_t;
++    attr = new pthread_attr_t;
++    cpu_set_t cpuset;
++    CPU_ZERO(&cpuset);
++    CPU_SET(1,&cpuset);
++    pthread_attr_init(attr);
++    pthread_attr_setaffinity_np(attr,sizeof(cpu_set_t),&cpuset);
++    pthread_create(receive_thread, attr, receive_thread_func, (void *)server);
++  
++}
++
++
++void tBench_deleteReq() 
++{
++    delete global_req;
++}
++
++void tBench_join() 
++{   
++    pthread_join(*receive_thread,NULL);
++}
+diff --git a/xapian/kill_networked.sh b/xapian/kill_networked.sh
+index 795c439..7c2515b 100755
+--- a/xapian/kill_networked.sh
++++ b/xapian/kill_networked.sh
+@@ -1,6 +1,6 @@
+ #!/bin/bash
+ 
+ kill -9 $(cat server.pid)
+-kill -9 $(cat client.pid)
++#kill -9 $(cat client.pid)
+ 
+ rm server.pid client.pid
+diff --git a/xapian/main.cpp b/xapian/main.cpp
+index 5d9bfab..3f1dba6 100755
+--- a/xapian/main.cpp
++++ b/xapian/main.cpp
+@@ -31,13 +31,6 @@ int main(int argc, char* argv[]) {
+     unsigned numServers = 4;
+     string dbPath = "db";
+ 
+-
+-    cpu_set_t cpuset;
+-    CPU_ZERO(&cpuset);
+-    CPU_SET(13,&cpuset);
+-
+-    pthread_t current_thread = thread_self();
+-    pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
+     int c;
+     string optString = "n:d:r:";
+     while ((c = getopt(argc, argv, optString.c_str())) != -1) {
+@@ -63,9 +56,14 @@ int main(int argc, char* argv[]) {
+                 break;
+         }
+     }
+-
++    
++    cpu_set_t cpuset;
++    CPU_ZERO(&cpuset);
++    CPU_SET(2,&cpuset);
++    pthread_t thread = pthread_self();
++    int s = pthread_setaffinity_np(thread,sizeof(cpu_set_t),&cpuset);
+     tBenchServerInit(numServers);
+-
++    tBenchSetup_thread();
+     Server::init(numReqsToProcess, numServers);
+     Server** servers = new Server* [numServers];
+     for (unsigned i = 0; i < numServers; i++)
+@@ -79,22 +77,15 @@ int main(int argc, char* argv[]) {
+         }
+     }
+     
+-    cpu_set_t cpuset_receive_thread;
+-    CPU_ZERO(&cpuset_receive_thread);
+-    CPU_SET(12,&cpuset_receive_thread);
+-
+-    pthread_t *receive_thread = NULL;
+-    pthread_create(receive_thread,NULL,Server::receive_thread,servers[numServers-1]);
+-
+-    pthread_setaffinity_np(*receive_thread, sizeof(cpu_set_t), &cpuset);
+     Server::run(servers[numServers - 1]);
+-    pthread_join(*receive_thread,NULL);
+-
++    
++    tBench_join();
+     if (numServers > 1) {
+         for (unsigned i = 0; i < numServers - 1; i++)
+             pthread_join(threads[i], NULL);
+     }
+-
++    
++    
+     tBenchServerFinish();
+ 
+     for (unsigned i = 0; i < numServers; i++)
+diff --git a/xapian/parselatsbin.py b/xapian/parselatsbin.py
+index e1255ff..5dd9821 100755
+--- a/xapian/parselatsbin.py
++++ b/xapian/parselatsbin.py
+@@ -1,7 +1,7 @@
+ #!/usr/bin/python
+ 
+ import numpy as np
+-import matplotlib.pyplot as plt
++#import matplotlib.pyplot as plt
+ import sys
+ import csv 
+ input_file = sys.argv[1]
+@@ -14,7 +14,7 @@ with file:
+ 	for line in lines:
+ 		times = line.split(' ')
+ 		service_time = float(times[1])
+-		latency_time = float(times[2])
++		latency_time = float(times[0]) + float(times[1])
+ 		service_time_list.append(service_time/1000000)
+ 		latency_time_list.append(latency_time/1000000)
+ ##		print service_time/1000000,' ',latency_time/1000000 
+@@ -57,5 +57,5 @@ for i in range(0,len(yvals_service_list)):
+ 		index_95 = i
+ 
+ 
+-print '95th-percentile: ', sorted_latency_time_list[index_95]
+-print '99th-percentile: ', sorted_latency_time_list[index_99]
++print '95th-percentile: ', sorted_service_time_list[index_95]
++print '99th-percentile: ', sorted_service_time_list[index_99]
+diff --git a/xapian/run_client.sh b/xapian/run_client.sh
+new file mode 100755
+index 0000000..9f45857
+--- /dev/null
++++ b/xapian/run_client.sh
+@@ -0,0 +1,18 @@
++#!/bin/bash
++# $1 is the core number
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
++source ${DIR}/../configs.sh
++
++NSERVERS=1
++QPS=$3
++WARMUPREQS=1000
++
++TBENCH_QPS=${QPS} TBENCH_MINSLEEPNS=100000 TBENCH_SERVER=$2 \
++  TBENCH_TERMS_FILE=${DATA_ROOT}/xapian/terms.in TBENCH_CLIENT_THREADS=2 taskset -c $1 /home/yl408/tailbench-v0.9/xapian/xapian_networked_client &
++echo $! > client.pid
++
++wait $(cat client.pid)
++
++rm client.pid
++
++
+diff --git a/xapian/run_networked.sh b/xapian/run_networked.sh
+index ba62661..21c6774 100755
+--- a/xapian/run_networked.sh
++++ b/xapian/run_networked.sh
+@@ -12,15 +12,17 @@ echo $NSERVERS
+ 
+ #/home/yl408/scripts/bash_scripts/turnoff_HT.sh
+ TBENCH_MAXREQS=${REQUESTS} TBENCH_WARMUPREQS=${WARMUPREQS} \
+- taskset -c $1  $HOME/tailbench-v0.9/xapian/xapian_networked_server -n ${NSERVERS} -d ${DATA_ROOT}/xapian/wiki \
++ taskset -c $1  /home/yl408/tailbench-v0.9/xapian/xapian_networked_server -n ${NSERVERS} -d ${DATA_ROOT}/xapian/wiki \
+     -r 1000000000 &
+ echo $! > server.pid
+-
++cat server.pid
+ sudo chrt -f -p 99 $(cat server.pid)
+ # ssh yl408@clipper02 'cd ~/tailbench-v0.9/xapian/;TBENCH_QPS=600 TBENCH_MINSLEEPNS=100000 TBENCH_SERVER=10.148.54.60 TBENCH_TERMS_FILE=/home/yl408/tailbench.inputs/xapi#an/terms.in taskset -c 12-13 ./xapian_networked_client '
+ 
+ TBENCH_QPS=${QPS} TBENCH_MINSLEEPNS=100000 TBENCH_SERVER= \
+-  TBENCH_TERMS_FILE=${DATA_ROOT}/xapian/terms.in TBENCH_CLIENT_THREADS=4 taskset -c 2-9 $HOME/tailbench-v0.9/xapian/xapian_networked_client &
++
++TBENCH_TERMS_FILE=${DATA_ROOT}/xapian/terms.in TBENCH_CLIENT_THREADS=2 taskset -c 3-6 /home/yl408/tailbench-v0.9/xapian/xapian_networked_client &
++
+ echo $! > client.pid
+ 
+ sudo chrt -f -p 99 $(cat client.pid)
+@@ -28,6 +30,6 @@ sudo chrt -f -p 99 $(cat client.pid)
+ wait $(cat client.pid)
+ 
+ # Clean up
+-./kill_networked.sh
++#./kill_networked.sh
+ #rm server.pid client.pid
+ #/home/yl408/scripts/bash_scripts/turnon_HT.sh                          
+diff --git a/xapian/server.cpp b/xapian/server.cpp
+index 6510e8a..97b7e4e 100755
+--- a/xapian/server.cpp
++++ b/xapian/server.cpp
+@@ -33,7 +33,6 @@ Server::Server(int id, string dbPath)
+     parser.set_stemmer(stemmer);
+     parser.set_stemming_strategy(Xapian::QueryParser::STEM_SOME);
+     parser.set_stopper(&stopper);
+-    request_count = 0;
+ }
+ 
+ Server::~Server() {
+@@ -47,33 +46,19 @@ void Server::_run() {
+     while (numReqsProcessed < numReqsToProcess) {
+        processRequest();
+        ++numReqsProcessed;
+-  //    std::cerr << numReqsProcessed << std::endl;
+     }
+ }
+ 
+-void Server::receiveRequest() {
+-    //const unsigned MAX_TERM_LEN = 256;
+-    //char term[MAX_TERM_LEN];
+-    void *termPtr;
+-    size_t len = tBenchRecvReq(&termPtr);
+-    request_queue.push(make_pair(termPtr,len));
+-}
+-
+ void Server::processRequest() {
+     const unsigned MAX_TERM_LEN = 256;
+     char term[MAX_TERM_LEN];
+-    //void* termPtr;
+-    
+-//    cerr << "here begin to receive request " << request_count << endl;
+-   // size_t len = tBenchRecvReq(&termPtr);
+-    std::pair<void *,size_t> request = request_queue.pop();
+-    void* termPtr = request.first;
+-    size_t len  = request.second;
++    void* termPtr;
+ 
++    size_t len = tBenchRecvReq(&termPtr);
+     memcpy(reinterpret_cast<void*>(term), termPtr, len);
+     term[len] = '\0';
+-    request_count++;
+-//    cerr << "here begin to process " <<request_count<<endl;
++    tBench_deleteReq();
++    //std::cerr << "reach here ! " << std::endl;
+     unsigned int flags = Xapian::QueryParser::FLAG_DEFAULT;
+     Xapian::Query query = parser.parse_query(term, flags);
+     enquire.set_query(query);
+@@ -93,7 +78,7 @@ void Server::processRequest() {
+ 
+         if (++doccount == MAX_DOC_COUNT) break;
+     }
+-//    cerr <<"here finish processing " <<request_count<<endl;
++    //std::cerr << "reach here finish processing" <<std::endl;
+     tBenchSendResp(reinterpret_cast<void*>(res), resLen);
+ }
+ 
+@@ -103,12 +88,6 @@ void* Server::run(void* v) {
+     return NULL;
+ }
+ 
+-void *Server::receive(void *v) {
+-    pthread_barrier_wait(&barrier);
+-    while(numReqsProcessed < numReqsToProcess) {
+-        receiveRequest();
+-    }
+-}
+ void Server::init(unsigned long _numReqsToProcess, unsigned numServers) {
+     numReqsToProcess = _numReqsToProcess;
+     pthread_barrier_init(&barrier, NULL, numServers);
+diff --git a/xapian/setup.sh b/xapian/setup.sh
+new file mode 100755
+index 0000000..f1425b4
+--- /dev/null
++++ b/xapian/setup.sh
+@@ -0,0 +1,8 @@
++#!/bin/bash
++DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
++source ${DIR}/../configs.sh
++
++NSERVERS=1
++QPS=$1
++WARMUPREQS=500
++REQUESTS=$2

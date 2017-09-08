@@ -50,7 +50,9 @@ struct Response {
     uint64_t arrvNs;
     #endif
     size_t len;
+    #ifdef CONTROL_WITH_QLEARNING
     size_t queue_len;
+    #endif
     char data[MAX_RESP_BYTES];
 };
 
