@@ -27,12 +27,35 @@
 
 #include <unordered_map>
 #include <vector>
+#include <queue>
+#include <algorithm>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <errno.h>
+#include <semaphore.h>
+
+typedef struct {
+    unsigned int Qlength;
+    double service_time;
+} state_info_t;
 
 class Server {
     protected:
         struct ReqInfo {
-            uint64_t id;
-            uint64_t startNs;
+        uint64_t id;
+        uint64_t startNs;
+	    uint64_t Qlength;
+	    uint64_t Reqlen;
+        uint64_t RecNs; // time when the request is received at the server
         };
 
         uint64_t finishedReqs;
@@ -40,6 +63,8 @@ class Server {
         uint64_t warmupReqs;
 
         std::vector<ReqInfo> reqInfo; // Request info for each thread 
+        
+
 
     public:
         Server(int nthreads) {
@@ -77,19 +102,45 @@ class NetworkedServer : public Server {
                                // This is incremented by 1 on each go. This
                                // avoids unfairly favoring some clients over
                                // others
+        int shm_fd, runLength;
+        int sem_fd;
+        int state_fd;
+        sem_t *sem;
+        void *shm_base;
+        void *state_info_base;
+        int starttime;
+        state_info_t state_info;
 
+        const char *name = "server_info";
+        const char *state_name = "state_info";
+        //const char *sem_name = "sem";
         void printDebugStats() const;
 
         // Helper Functions
         void removeClient(int fd);
+        std::queue<Request*> recvReq_Queue;
+	    std::queue<int> fd_Queue;
+	    std::queue<int> Qlen_Queue;
+        std::queue<uint64_t> rectime_Queue;
+        std::vector<uint64_t> latencies;
+        std::vector<uint64_t> services; 
         bool checkRecv(int recvd, int expected, int fd);
     public:
+
         NetworkedServer(int nthreads, std::string ip, int port, int nclients);
         ~NetworkedServer();
 
+        int recvReq_Q();
         size_t recvReq(int id, void** data);
         void sendResp(int id, const void* data, size_t size);
         void finish();
+
+        //for shared memory
+
+        void init_mem();
+        void update_mem();
+        void update_server_info(unsigned int Qlength, float service_time);
+
 };
 
 #endif

@@ -21,7 +21,7 @@
 #include <pthread.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-
+#include <csignal>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -37,7 +37,7 @@ void* send(void* c) {
             std::cerr << "[CLIENT] send() failed : " << client->errmsg() \
                 << std::endl;
             std::cerr << "[CLIENT] Not sending further request" << std::endl;
-
+	    client->dumpStats();
             break; // We are done
         }
 //	std::cerr << "client finish sending request " << std::endl;
@@ -48,24 +48,28 @@ void* send(void* c) {
 
 void* recv(void* c) {
     NetworkedClient* client = reinterpret_cast<NetworkedClient*>(c);
-
+   // std::cerr << "client begin to recv" << std::endl;
     Response resp;
     while (true) {
         if (!client->recv(&resp)) {
             std::cerr << "[CLIENT] recv() failed : " << client->errmsg() \
                 << std::endl;
+	    client->dumpStats();
             return nullptr;
         }
-
+       // std::cerr << "client begin to recv reach here 1" << std::endl;
         if (resp.type == RESPONSE) {
             client->finiReq(&resp);
+	 //   std::cerr<<"reach reponse is RESPONSE" << std::endl;
         } else if (resp.type == ROI_BEGIN) {
             client->startRoi();
+	 //   std::cerr << "reach reponse is ROI_BEGIN" << std::endl;
         } else if (resp.type == FINISH) {
             client->dumpStats();
             syscall(SYS_exit_group, 0);
         } else {
             std::cerr << "Unknown response type: " << resp.type << std::endl;
+//	    client->dumpStats();
             return nullptr;
         }
     }
@@ -77,7 +81,7 @@ int main(int argc, char* argv[]) {
     int serverport = getOpt<int>("TBENCH_SERVER_PORT", 7000);
 
     NetworkedClient* client = new NetworkedClient(nthreads, server, serverport);
-
+    signal(SIGPIPE, SIG_IGN);
     std::vector<pthread_t> senders(nthreads);
     std::vector<pthread_t> receivers(nthreads);
 
@@ -102,5 +106,7 @@ int main(int argc, char* argv[]) {
         assert(status == 0);
     }
 
+    std::cerr << "client reach ends! " <<std::endl;
+    client->dumpStats();
     return 0;
 }

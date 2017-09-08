@@ -27,7 +27,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
- #include "dynamic_qps_lookup.h"
 
 enum ClientStatus { INIT, WARMUP, ROI, FINISHED };
 
@@ -47,15 +46,14 @@ class Client {
         uint64_t startedReqs;
         std::unordered_map<uint64_t, Request*> inFlightReqs;
 
-        std::vector<uint64_t> svcTimes;
-        std::vector<uint64_t> queueTimes;
-        std::vector<uint64_t> sjrnTimes;
-
-        void _startRoi();
-
-        DQPSLookup dqpsLookup;
-
-
+       std::vector<uint64_t> svcTimes;
+       std::vector<uint64_t> queueTimes;
+       std::vector<uint64_t> sjrnTimes;
+	   std::vector<uint64_t> startTimes;
+	   std::vector<uint64_t> QueueLens;
+	   std::vector<uint64_t> ReqLens;
+	   bool isdumped = false;
+       void _startRoi();
 
     public:
         Client(int nthreads);

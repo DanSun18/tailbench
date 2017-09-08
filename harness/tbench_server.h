@@ -33,6 +33,11 @@ size_t tBenchRecvReq(void** data);
 
 void tBenchSendResp(const void* data, size_t size);
 
+void tBenchSetup_thread();
+
+void tBench_join();
+
+void tBench_deleteReq();
 #ifdef __cplusplus 
 }
 #endif

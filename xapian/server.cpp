@@ -33,7 +33,6 @@ Server::Server(int id, string dbPath)
     parser.set_stemmer(stemmer);
     parser.set_stemming_strategy(Xapian::QueryParser::STEM_SOME);
     parser.set_stopper(&stopper);
-    request_count = 0;
 }
 
 Server::~Server() {
@@ -47,33 +46,19 @@ void Server::_run() {
     while (numReqsProcessed < numReqsToProcess) {
        processRequest();
        ++numReqsProcessed;
-  //    std::cerr << numReqsProcessed << std::endl;
     }
-}
-
-void Server::receiveRequest() {
-    //const unsigned MAX_TERM_LEN = 256;
-    //char term[MAX_TERM_LEN];
-    void *termPtr;
-    size_t len = tBenchRecvReq(&termPtr);
-    request_queue.push(make_pair(termPtr,len));
 }
 
 void Server::processRequest() {
     const unsigned MAX_TERM_LEN = 256;
     char term[MAX_TERM_LEN];
-    //void* termPtr;
-    
-//    cerr << "here begin to receive request " << request_count << endl;
-   // size_t len = tBenchRecvReq(&termPtr);
-    std::pair<void *,size_t> request = request_queue.pop();
-    void* termPtr = request.first;
-    size_t len  = request.second;
+    void* termPtr;
 
+    size_t len = tBenchRecvReq(&termPtr);
     memcpy(reinterpret_cast<void*>(term), termPtr, len);
     term[len] = '\0';
-    request_count++;
-//    cerr << "here begin to process " <<request_count<<endl;
+    tBench_deleteReq();
+    //std::cerr << "reach here ! " << std::endl;
     unsigned int flags = Xapian::QueryParser::FLAG_DEFAULT;
     Xapian::Query query = parser.parse_query(term, flags);
     enquire.set_query(query);
@@ -93,7 +78,7 @@ void Server::processRequest() {
 
         if (++doccount == MAX_DOC_COUNT) break;
     }
-//    cerr <<"here finish processing " <<request_count<<endl;
+    //std::cerr << "reach here finish processing" <<std::endl;
     tBenchSendResp(reinterpret_cast<void*>(res), resLen);
 }
 
@@ -103,12 +88,6 @@ void* Server::run(void* v) {
     return NULL;
 }
 
-void *Server::receive(void *v) {
-    pthread_barrier_wait(&barrier);
-    while(numReqsProcessed < numReqsToProcess) {
-        receiveRequest();
-    }
-}
 void Server::init(unsigned long _numReqsToProcess, unsigned numServers) {
     numReqsToProcess = _numReqsToProcess;
     pthread_barrier_init(&barrier, NULL, numServers);

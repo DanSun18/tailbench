@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import sys
 import csv 
 input_file = sys.argv[1]
@@ -14,7 +14,7 @@ with file:
 	for line in lines:
 		times = line.split(' ')
 		service_time = float(times[1])
-		latency_time = float(times[2])
+		latency_time = float(times[0]) + float(times[1])
 		service_time_list.append(service_time/1000000)
 		latency_time_list.append(latency_time/1000000)
 ##		print service_time/1000000,' ',latency_time/1000000 
@@ -57,5 +57,5 @@ for i in range(0,len(yvals_service_list)):
 		index_95 = i
 
 
-print '95th-percentile: ', sorted_latency_time_list[index_95]
-print '99th-percentile: ', sorted_latency_time_list[index_99]
+print '95th-percentile: ', sorted_service_time_list[index_95]
+print '99th-percentile: ', sorted_service_time_list[index_99]

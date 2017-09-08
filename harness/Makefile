@@ -2,13 +2,13 @@
 #include ../Makefile.config
 
 CXX = g++
-CXXFLAGS = -O3 -g -fPIC -std=c++0x
+CXXFLAGS = -O3 -g -fPIC -std=c++0x -lrt
 COMMON_INCLUDES = dist.h helpers.h msgs.h
 
 default: client.o tbench_server_integrated.o tbench_server_networked.o \
 	tbench_client_networked.o tbench.jar
 
-client.o : client.cpp client.h dynamic_qps_lookup.cpp dynamic_qps_lookup.h $(COMMON_INCLUDES)
+client.o : client.cpp client.h $(COMMON_INCLUDES)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 tbench_server_integrated.o : tbench_server_integrated.cpp tbench_server.h \

@@ -41,7 +41,7 @@
  * Client
  *******************************************************************************/
 
-Client::Client(int _nthreads) : dqpsLookup("input.test") {
+Client::Client(int _nthreads) {
     status = INIT;
 
     nthreads = _nthreads;
@@ -74,25 +74,13 @@ Request* Client::startReq() {
             pthread_barrier_destroy(&barrier);
             pthread_barrier_init(&barrier, nullptr, nthreads);
         }
-        dqpsLookup.setStartingNs();
+
         pthread_mutex_unlock(&lock);
+
         pthread_barrier_wait(&barrier);
     }
 
     pthread_mutex_lock(&lock);
-
-    double newQPS = dqpsLookup.currentQPS();
-    if(newQPS > 0)
-    {
-        double newLambda = newQPS * 1e-9;
-        if(newLambda != lambda)
-        {
-            lambda = newLambda;
-            delete dist;
-            uint64_t curNs = getCurNs();
-            dist = new ExpDist(lambda,seed,curNs);
-        }
-    }
 
     Request* req = new Request();
     size_t len = tBenchClientGenReq(&req->data);
@@ -131,7 +119,10 @@ void Client::finiReq(Response* resp) {
 
         queueTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
-        sjrnTimes.push_back(sjrn);
+        //sjrnTimes.push_back(sjrn);
+	startTimes.push_back(req->genNs);
+	ReqLens.push_back(req->len);
+	QueueLens.push_back(resp->queue_len);
     }
 
     delete req;
@@ -155,9 +146,13 @@ void Client::startRoi() {
 }
 
 void Client::dumpStats() {
+   
+    
+    if(isdumped)
+	return;   
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
-    int reqs = sjrnTimes.size();
-
+    int reqs =svcTimes.size();
+    std::cerr << "generating lats.bin with req number "<<reqs<<std::endl;
     for (int r = 0; r < reqs; ++r) {
        // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
        //             sizeof(queueTimes[r]));
@@ -169,10 +164,13 @@ void Client::dumpStats() {
 	out<<' ';
 	out<<svcTimes[r];
         out<<' ';
-        out<<sjrnTimes[r];
+        out<<ReqLens[r];
+	out<<' ';
+	out<<QueueLens[r];
         out<<'\n';
     }
     out.close();
+    isdumped = true;
 }
 
 /*******************************************************************************
@@ -248,6 +246,7 @@ bool NetworkedClient::recv(Response* resp) {
     int recvd = recvfull(serverFd, reinterpret_cast<char*>(resp), len, 0);
     if (recvd != len) {
         error = strerror(errno);
+	pthread_mutex_unlock(&recvLock);
         return false;
     }
 
@@ -257,6 +256,7 @@ bool NetworkedClient::recv(Response* resp) {
 
         if (static_cast<size_t>(recvd) != resp->len) {
             error = strerror(errno);
+	    pthread_mutex_unlock(&recvLock);
             return false;
         }
     }
