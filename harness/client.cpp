@@ -340,26 +340,26 @@ NetworkedClient::NetworkedClient(int nthreads, std::string serverip,
     portstr << serverport;
     
     const char* serverStr = serverip.size() ? serverip.c_str() : nullptr;
-
+    std::cerr << "Getting addr info" << std::endl; 
     if ((status = getaddrinfo(serverStr, portstr.str().c_str(), &hints, 
                     &servInfo)) != 0) {
         std::cerr << "getaddrinfo() failed: " << gai_strerror(status) \
             << std::endl;
         exit(-1);
     }
-
+    std::cerr << "Creating socket" << std::endl; 
     serverFd = socket(servInfo->ai_family, servInfo->ai_socktype, \
             servInfo->ai_protocol);
     if (serverFd == -1) {
         std::cerr << "socket() failed: " << strerror(errno) << std::endl;
         exit(-1);
     }
-
+    std::cerr << "Connecting" << std::endl; 
     if (connect(serverFd, servInfo->ai_addr, servInfo->ai_addrlen) == -1) {
         std::cerr << "connect() failed: " << strerror(errno) << std::endl;
         exit(-1);
     }
-
+    std::cerr << "Setting socket option" << std::endl; 
     int nodelay = 1;
     if (setsockopt(serverFd, IPPROTO_TCP, TCP_NODELAY, 
                 reinterpret_cast<char*>(&nodelay), sizeof(nodelay)) == -1) {
