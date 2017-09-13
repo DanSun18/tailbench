@@ -21,6 +21,7 @@
 #include <stdlib.h>
 
 #define PER_REQ_MONITOR
+// #define CONTROL_WITH_QLEARNING
 
 const int MAX_REQ_BYTES = 1 << 20; // 1 MB
 const int MAX_RESP_BYTES = 1 << 20; // 1 MB

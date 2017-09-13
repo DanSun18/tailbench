@@ -47,6 +47,7 @@
 /*******************************************************************************
  * NetworkedServer
  *******************************************************************************/
+ #ifdef CONTROL_WITH_QLEARNING
  std::queue<Request> get_Queue() {
     std::queue<Request> Q;
     return Q;
@@ -57,6 +58,7 @@ pthread_attr_t *attr;
 Request *global_req;
 
 pthread_cond_t rec_cv;
+#endif
 
 NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
         int nclients) 
@@ -65,8 +67,13 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     pthread_mutex_init(&sendLock, nullptr);
     pthread_mutex_init(&recvLock, nullptr);
 
+    #ifdef CONTROL_WITH_QLEARNING
     pthread_cond_init(&rec_cv,nullptr);
+    #endif
+
+    #ifdef PER_REQ_MONITOR
     pthread_mutex_init(&pcmLock, nullptr);
+    #endif
     reqbuf = new Request[nthreads]; 
 
     activeFds.resize(nthreads);
@@ -75,7 +82,10 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     sktstates.resize(nthreads);
     #endif
     recvClientHead = 0;
+
+    #ifdef CONTROL_WITH_QLEARNING
     starttime = 0;
+    #endif
     // Get address info
     int status;
     struct addrinfo hints;
@@ -149,7 +159,9 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
         }
 
         clientFds.push_back(clientFd);
+        #ifdef CONTROL_WITH_QLEARNING
         init_mem();
+        #endif
     }
 }
 
@@ -185,6 +197,8 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
     return success;
 }
 
+
+#ifdef CONTROL_WITH_QLEARNING
 int NetworkedServer::recvReq_Q() {
     bool success = false;
     Request *req = new Request;
@@ -253,11 +267,12 @@ int NetworkedServer::recvReq_Q() {
 
 }
 
-
+#endif
 
 //arguments: id is thread id
-
+#ifdef CONTROL_WITH_QLEARNING
 size_t NetworkedServer::recvReq(int id, void** data) {
+
   //  std::cerr << "reach here 1 " <<std::endl;
     pthread_mutex_lock(&recvLock);
   //  std::cerr << "reach here 2 " << recvReq_Queue.empty()<<std::endl;
@@ -290,15 +305,13 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     return len;
     
 }
-
-/*size_t NetworkedServer::recvReq(int id, void** data) {
+#else
+size_t NetworkedServer::recvReq(int id, void** data) {
     pthread_mutex_lock(&recvLock);
 
     bool success = false;
     Request* req;
     int fd = -1;
-    
-    //std::cerr<<"begin retreive request from client port.."<<std::endl;
     while (!success && clientFds.size() > 0) {
         int maxFd = -1;
         fd_set readSet;
@@ -308,17 +321,12 @@ size_t NetworkedServer::recvReq(int id, void** data) {
             if (f > maxFd) maxFd = f;
         }
 	
-	//std::cerr<<"reach here 1 " <<"maxfd is "<<maxFd<<std::endl;
         int ret = select(maxFd + 1, &readSet, nullptr, nullptr, nullptr);
-	//std::cerr<<"reach here 1.5 " <<std::endl;
         if (ret == -1) {
             std::cerr << "select() failed: " << strerror(errno) << std::endl;
             exit(-1);
         }
-        
-        //std::cerr<<"reach here 2 " << std::endl;
         fd = -1;
-
         for (size_t i = 0; i < clientFds.size(); ++i) {
             size_t idx = (recvClientHead + i) % clientFds.size();
             if (FD_ISSET(clientFds[idx], &readSet)) {
@@ -326,8 +334,6 @@ size_t NetworkedServer::recvReq(int id, void** data) {
                 break;
             }
         }
-	
-	//std::cerr<<"reach here 3" <<std::endl;
 
         recvClientHead = (recvClientHead + 1) % clientFds.size();
 
@@ -394,21 +400,27 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     pthread_mutex_unlock(&recvLock);
 
     return req->len;
-};*/
+};
+#endif
+
 
 void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     pthread_mutex_lock(&sendLock);
 
     Response* resp = new Response();
     
+    #ifdef CONTROL_WITH_QLEARNING
     if (starttime == 0)
         starttime = getCurNs();
-    
+    #endif
+
     resp->type = RESPONSE;
     resp->id = reqInfo[id].id;
     resp->len = len;
+    #ifdef CONTROL_WITH_QLEARNING
     resp->queue_len = reqInfo[id].Qlength;
    // resp->req_len = reqInfo[id].Reqlen;
+    #endif
     memcpy(reinterpret_cast<void*>(&resp->data), data, len);
 
     
@@ -484,9 +496,11 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
         }
     }
 
+    #ifdef CONTROL_WITH_QLEARNING
     latencies.push_back(svcFinishNs-reqInfo[id].RecNs);
     services.push_back(resp->svcNs);
     update_mem();
+    #endif
 
     delete resp;
     
@@ -510,6 +524,7 @@ void NetworkedServer::finish() {
     pthread_mutex_unlock(&sendLock);
 }
 
+#ifdef CONTROL_WITH_QLEARNING
 void NetworkedServer::init_mem()
 {   
     const int SIZE = sizeof(double);
@@ -579,6 +594,8 @@ void NetworkedServer::update_server_info(unsigned int Qlength, float service_tim
     state_info.service_time = service_time;
     memcpy(state_info_base,&state_info,sizeof(state_info_t));
 }
+
+#endif
 /*******************************************************************************
  * Per-thread State
  *******************************************************************************/
@@ -719,6 +736,7 @@ void tBenchSendResp(const void* data, size_t size) {
     return server->sendResp(tid, data, size);
 }
 
+#ifdef CONTROL_WITH_QLEARNING
 
 void* receive_thread_func(void *ptr)
 {   
@@ -756,3 +774,5 @@ void tBench_join()
 {   
     pthread_join(*receive_thread,NULL);
 }
+
+#endif
