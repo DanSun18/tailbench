@@ -724,7 +724,9 @@ void tBenchServerThreadStart() {
 }
 
 void tBenchServerFinish() {
+    #ifdef PER_REQ_MONITOR
 	pcm->cleanup();
+    #endif
     server->finish();
 }
 

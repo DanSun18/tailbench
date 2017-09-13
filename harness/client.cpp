@@ -243,7 +243,7 @@ void Client::startRoi() {
 void Client::dumpStats() {
    
     
-    if(isdumped)
+    if(dumped)
 	return;   
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
     int reqs =svcTimes.size();
@@ -253,14 +253,16 @@ void Client::dumpStats() {
 	out<<queueTimes[r];
 	out<<' ';
 	out<<svcTimes[r];
-        out<<' ';
-        out<<ReqLens[r];
+    #ifdef CONTROL_WITH_QLEARNING
+    out<<' ';
+    out<<ReqLens[r];
 	out<<' ';
 	out<<QueueLens[r];
+    #endif
         out<<'\n';
     }
     out.close();
-    isdumped = true;
+    dumped = true;
 }
 
 void Client::dumpAllStats() {
