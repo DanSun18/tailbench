@@ -640,7 +640,7 @@ void tBenchServerInit(int nthreads) {
         // }
     // }
     int meta_thread_core = getOpt<int>("META_THREAD_CORE", 5);
-    CPU_SET(meta_thread_core, &thread_cpu_set)
+    CPU_SET(meta_thread_core, &thread_cpu_set);
     pthread_t thread;
     thread = pthread_self();
     if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
@@ -710,8 +710,10 @@ void tBenchServerThreadStart() {
  //        	break;
 	// }
  //    }
-    int server_thread_core = getOpt<int>("SERVER_THREAD_" << tid <<"_CORE", 6);
-    CPU_SET(server_thread_core, &thread_cpu_set)
+    std::string parsing_text;
+    parsing_text = "SERVER_THREAD_" + std::to_string(tid) + "_CORE";
+    int server_thread_core = getOpt<int>(parsing_text.c_str(), 6);
+    CPU_SET(server_thread_core, &thread_cpu_set);
     pthread_t thread;
     thread = pthread_self();
     if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
