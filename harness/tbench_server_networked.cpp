@@ -607,7 +607,7 @@ __thread int tid;
  *******************************************************************************/
 std::atomic_int curTid;
 NetworkedServer* server;
-cpu_set_t cpuset_global;
+// cpu_set_t cpuset_global;
 pthread_mutex_t createLock;
 
 
@@ -620,26 +620,27 @@ void tBenchServerInit(int nthreads) {
     // std::cout << "Initiating locck for creating threads" << '\n';
 	pthread_mutex_init(&createLock, nullptr);
 	// std:: cout << "ZEROing cpuset" << '\n';
-    CPU_ZERO(&cpuset_global);
+    // CPU_ZERO(&cpuset_global);
 
-    if (sched_getaffinity(0, sizeof(cpu_set_t), &cpuset_global) != 0){
-        std::cerr << "sched_getaffinity failed" << '\n';
-        exit(1);
-    }
+    // if (sched_getaffinity(0, sizeof(cpu_set_t), &cpuset_global) != 0){
+        // std::cerr << "sched_getaffinity failed" << '\n';
+        // exit(1);
+    // }
     cpu_set_t thread_cpu_set;
     CPU_ZERO(&thread_cpu_set);
 
-    for (int c = 0; c < CPU_SETSIZE; ++c)
-    {
-        if (CPU_ISSET(c, &cpuset_global))
-        {
-            CPU_SET(c, &thread_cpu_set);
-            CPU_CLR(c, &cpuset_global);
+    // for (int c = 0; c < CPU_SETSIZE; ++c)
+    // {
+        // if (CPU_ISSET(c, &cpuset_global))
+        // {
+            // CPU_SET(c, &thread_cpu_set);
+            // CPU_CLR(c, &cpuset_global);
             // std::cout << "Pinning main thread to core " << c << '\n';
-		break;
-        }
-    }
-
+		// break;
+        // }
+    // }
+    int meta_thread_core = getOpt<int>("META_THREAD_CORE", 5);
+    CPU_SET(meta_thread_core, &thread_cpu_set)
     pthread_t thread;
     thread = pthread_self();
     if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
@@ -698,18 +699,19 @@ void tBenchServerThreadStart() {
     cpu_set_t thread_cpu_set;
     CPU_ZERO(&thread_cpu_set);
 
-    for (int c = 0; c < CPU_SETSIZE; ++c)
-    {
-        if (CPU_ISSET(c, &cpuset_global))
-        {
-            CPU_SET(c, &thread_cpu_set);
-            CPU_CLR(c, &cpuset_global);
-           // coreId = c;
-            // std::cout << "Pinning server thread " << tid << " to core " << c << '\n';
-        	break;
-	}
-    }
-
+ //    for (int c = 0; c < CPU_SETSIZE; ++c)
+ //    {
+ //        if (CPU_ISSET(c, &cpuset_global))
+ //        {
+ //            CPU_SET(c, &thread_cpu_set);
+ //            CPU_CLR(c, &cpuset_global);
+ //           // coreId = c;
+ //            // std::cout << "Pinning server thread " << tid << " to core " << c << '\n';
+ //        	break;
+	// }
+ //    }
+    int server_thread_core = getOpt<int>("SERVER_THREAD_" << tid <<"_CORE", 6);
+    CPU_SET(server_thread_core, &thread_cpu_set)
     pthread_t thread;
     thread = pthread_self();
     if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
@@ -759,7 +761,8 @@ void tBenchSetup_thread()
     attr = new pthread_attr_t;
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(1,&cpuset);
+    int controller_thread_core = getOpt<int>("CONTROLLER_THREAD_CORE", 7);
+    CPU_SET(controller_thread_core,&cpuset);
     pthread_attr_init(attr);
     pthread_attr_setaffinity_np(attr,sizeof(cpu_set_t),&cpuset);
     pthread_create(receive_thread, attr, receive_thread_func, (void *)server);
