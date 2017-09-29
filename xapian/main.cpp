@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     pthread_t thread = pthread_self();
     int s = pthread_setaffinity_np(thread,sizeof(cpu_set_t),&cpuset);
     tBenchServerInit(numServers);
-    tBenchSetup_thread();
+    // tBenchSetup_thread();
     Server::init(numReqsToProcess, numServers);
     Server** servers = new Server* [numServers];
     for (unsigned i = 0; i < numServers; i++)
