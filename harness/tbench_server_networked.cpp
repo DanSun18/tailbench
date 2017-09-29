@@ -617,8 +617,7 @@ pthread_mutex_t createLock;
  * API
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
-<<<<<<< HEAD
-=======
+    
    	pthread_mutex_init(&createLock, nullptr);
     cpu_set_t thread_cpu_set;
     CPU_ZERO(&thread_cpu_set);
