@@ -105,7 +105,7 @@ pthread_barrier_init(&barrier, nullptr, nthreads);
 
 minSleepNs = getOpt("TBENCH_MINSLEEPNS", 0);
 seed = getOpt("TBENCH_RANDSEED", 0);
-current_qps = getOpt<double>("TBENCH_QPS", 1000.0);
+current_qps = getOpt<double>("TBENCH_QPS", 500.0);
 lambda = current_qps * 1e-9;
 
 //QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
@@ -257,7 +257,7 @@ void Client::startRoi() {
 void Client::dumpStats() {
    
     
-    if(isdumped)
+    if(dumped)
 	return;   
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
     int reqs =svcTimes.size();
@@ -273,13 +273,13 @@ void Client::dumpStats() {
 	out<<' ';
 	out<<svcTimes[r];
         out<<' ';
-        out<<ReqLens[r];
-	out<<' ';
+     //   out<<ReqLens[r];
+//	out<<' ';
 	out<<QueueLens[r];
         out<<'\n';
     }
     out.close();
-    isdumped = true;
+    dumped = true;
 }
 
 void Client::dumpAllStats() {
@@ -331,18 +331,19 @@ void Client::dumpAllStats() {
             //            sizeof(svcTimes[r]));
            // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
            //             sizeof(sjrnTimes[r]));    
-        out << recvIds[r];
-        out << ' ';
-        out << genTimes[r];
-        out << ' ';
+//        out << recvIds[r];
+//        out << ' ';
+//        out << genTimes[r];
+//        out << ' ';
         out << queueTimes[r];
         out << ' ';
         out << svcTimes[r];
         out << ' ';
-        out << sjrnTimes[r];
-	    out << ' ';
-	    out << startTimes[r];
-        out << ' ';
+//        out << sjrnTimes[r];
+//	    out << ' ';
+//	    out << startTimes[r];
+//        out << ' ';
+out<<QueueLens[r];	
         #ifdef PER_REQ_MONITOR
         out << retiredInstrs[r];
         out << ' ';
