@@ -21,7 +21,7 @@ tbench_server_integrated.o : tbench_server_integrated.cpp tbench_server.h \
 
 tbench_server_networked.o : networked_server_unity.cpp tbench_server_networked.cpp tbench_server.h \
 	server.h $(COMMON_INCLUDES) $(PCM_FILES)
-	$(CXX) $(CXXFLAGS) -c $<  -o $@  -pthread -lrt
+	$(CXX) $(CXXFLAGS) -c $<  -o $@  -pthread
 
 tbench_client_networked.o : tbench_client_networked.cpp tbench_client.h \
 	server.h client.h $(COMMON_INCLUDES)
