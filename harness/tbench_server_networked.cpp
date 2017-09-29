@@ -669,7 +669,9 @@ void tBenchServerInit(int nthreads) {
     // std::cout << "TESTING: " << nthreads << " threads for server are detected\n";
     server = new NetworkedServer(nthreads, serverurl, serverport, nclients);
     std::cout << "----------Server Started----------" << '\n';
+    #ifdef CONTROL_WITH_QLEARNING
     tBenchSetup_thread();
+    #endif
 }
 
 void tBenchServerThreadStart() {
