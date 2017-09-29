@@ -105,7 +105,7 @@ pthread_barrier_init(&barrier, nullptr, nthreads);
 
 minSleepNs = getOpt("TBENCH_MINSLEEPNS", 0);
 seed = getOpt("TBENCH_RANDSEED", 0);
-current_qps = getOpt<double>("TBENCH_QPS", 1000.0);
+current_qps = getOpt<double>("TBENCH_QPS", 500.0);
 lambda = current_qps * 1e-9;
 
 //QPSSequence.push(getOpt<double>("TBENCH_QPS", 1000.0));
@@ -253,6 +253,7 @@ void Client::dumpStats() {
 	out<<queueTimes[r];
 	out<<' ';
 	out<<svcTimes[r];
+
     #ifdef CONTROL_WITH_QLEARNING
     out<<' ';
     out<<ReqLens[r];
@@ -260,6 +261,7 @@ void Client::dumpStats() {
 	out<<QueueLens[r];
     #endif
         out<<'\n';
+
     }
     out.close();
     dumped = true;
@@ -287,10 +289,13 @@ void Client::dumpAllStats() {
         out << ' ';
         out << svcTimes[r];
         out << ' ';
-        out << sjrnTimes[r];
-	    out << ' ';
-	    out << startTimes[r];
-        out << ' ';
+//        out << sjrnTimes[r];
+//	    out << ' ';
+//	    out << startTimes[r];
+//        out << ' ';
+        #ifdef CONTROL_WITH_QLEARNING
+        out<<QueueLens[r];	
+        #endif
         #ifdef PER_REQ_MONITOR
         out << retiredInstrs[r];
         out << ' ';

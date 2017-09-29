@@ -284,7 +284,7 @@ size_t NetworkedServer::recvReq(int id, void** data) {
  //   std::cerr << "reach here 3 " << std::endl;
     Request *req = recvReq_Queue.front();
     recvReq_Queue.pop();
-    
+   // std::cerr << "recv req "<<req->id << std::endl;    
     int fd = fd_Queue.front();
     fd_Queue.pop();
     int QL = Qlen_Queue.front();
@@ -495,8 +495,9 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
             assert(sent == totalLen);
         }
     }
-
+    
     #ifdef CONTROL_WITH_QLEARNING
+    //std::cerr << "resp request " << std::endl;
     latencies.push_back(svcFinishNs-reqInfo[id].RecNs);
     services.push_back(resp->svcNs);
     update_mem();
@@ -618,7 +619,7 @@ pthread_mutex_t createLock;
 void tBenchServerInit(int nthreads) {
     //get cpu affinity of process
     // std::cout << "Initiating locck for creating threads" << '\n';
-	pthread_mutex_init(&createLock, nullptr);
+   /*	pthread_mutex_init(&createLock, nullptr);
 	// std:: cout << "ZEROing cpuset" << '\n';
     // CPU_ZERO(&cpuset_global);
 
@@ -647,7 +648,7 @@ void tBenchServerInit(int nthreads) {
     {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
-    }
+    }**/
 
    // unsigned int coreID = sched_getcpu();
     // std::cout << "Confirm: Main thread running on " << coreID << '\n';
@@ -694,9 +695,9 @@ void tBenchServerInit(int nthreads) {
 }
 
 void tBenchServerThreadStart() {
-    pthread_mutex_lock(&createLock);
+//    pthread_mutex_lock(&createLock);
     tid = curTid++;
-    cpu_set_t thread_cpu_set;
+/*   cpu_set_t thread_cpu_set;
     CPU_ZERO(&thread_cpu_set);
 
  //    for (int c = 0; c < CPU_SETSIZE; ++c)
@@ -721,9 +722,10 @@ void tBenchServerThreadStart() {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
     }
+  
     // unsigned int coreID = sched_getcpu();
     // std::cout << "Confirm: server thread " << tid << " running on " << coreID << '\n';
-
+ */
     pthread_mutex_unlock(&createLock);
 }
 
