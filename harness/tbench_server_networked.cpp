@@ -748,4 +748,8 @@ void tBench_join()
     pthread_join(*receive_thread,NULL);
 }
 
+#else
+void tBench_join(){
+    //do nothing
+}
 #endif
