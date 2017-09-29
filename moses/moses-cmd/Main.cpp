@@ -774,7 +774,7 @@ int main(int argc, char** argv)
 #ifdef WITH_THREADS
     pool.Stop(true); //flush remaining jobs
 #endif
-
+    tBench_join();
     delete ioWrapper;
 
   } catch (const std::exception &e) {
