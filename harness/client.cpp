@@ -289,15 +289,16 @@ void Client::dumpAllStats() {
         out << ' ';
         out << svcTimes[r];
         out << ' ';
-//        out << sjrnTimes[r];
-//	    out << ' ';
-//	    out << startTimes[r];
-//        out << ' ';
+        out << sjrnTimes[r];
+	out << ' ';
+	out << startTimes[r];
         #ifdef CONTROL_WITH_QLEARNING
-        out<<QueueLens[r];	
+        out << ' ';
+	out<<QueueLens[r];	
         #endif
         #ifdef PER_REQ_MONITOR
-        out << retiredInstrs[r];
+        out << ' ';
+	out << retiredInstrs[r];
         out << ' ';
         out << sktReads[r];
         out << ' ';
