@@ -629,7 +629,7 @@ void tBenchServerInit(int nthreads) {
     {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
-    }*
+    }
 
    // unsigned int coreID = sched_getcpu();
     // std::cout << "Confirm: Main thread running on " << coreID << '\n';
