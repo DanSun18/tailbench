@@ -255,8 +255,8 @@ void Client::dumpStats() {
 	out<<svcTimes[r];
 
     #ifdef CONTROL_WITH_QLEARNING
-    out<<' ';
-    out<<ReqLens[r];
+    //out<<' ';
+    //out<<ReqLens[r];
 	out<<' ';
 	out<<QueueLens[r];
     #endif
