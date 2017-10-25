@@ -89,7 +89,7 @@ class Client {
         std::vector<uint64_t> queueTimes;
         std::vector<uint64_t> sjrnTimes;
 	    std::vector<uint64_t> startTimes; //start time of service
-        #ifdef CONTROL_WITH_QLEARNING
+        #ifdef CONTROL_WITH_QLEARNING //store data for q learning to analyze
         std::vector<uint64_t> QueueLens;
         #endif
         std::vector<uint64_t> recvIds;

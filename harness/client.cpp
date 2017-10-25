@@ -201,7 +201,7 @@ void Client::finiReq(Response* resp) {
         recvIds.push_back(resp->id);
         genTimes.push_back(genTime);
 
-        #ifdef CONTROL_WITH_QLEARNING
+        #ifdef CONTROL_WITH_QLEARNING //store data into queue for q learning
         QueueLens.push_back(resp->queue_len);
         #endif
 
@@ -254,7 +254,7 @@ void Client::dumpStats() {
 	out<<' ';
 	out<<svcTimes[r];
 
-    #ifdef CONTROL_WITH_QLEARNING
+    #ifdef CONTROL_WITH_QLEARNING //output corresponding data for Q Learning
     out<<' ';
     out<<ReqLens[r];
 	out<<' ';
@@ -293,7 +293,7 @@ void Client::dumpAllStats() {
 //	    out << ' ';
 //	    out << startTimes[r];
 //        out << ' ';
-        #ifdef CONTROL_WITH_QLEARNING
+        #ifdef CONTROL_WITH_QLEARNING //output corresponding data for Q Learning
         out<<QueueLens[r];	
         #endif
         #ifdef PER_REQ_MONITOR
