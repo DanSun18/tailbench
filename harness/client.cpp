@@ -201,7 +201,7 @@ void Client::finiReq(Response* resp) {
         recvIds.push_back(resp->id);
         genTimes.push_back(genTime);
 
-        #ifdef CONTROL_WITH_QLEARNING
+        #ifdef CONTROL_WITH_QLEARNING //store data into queue for q learning
         QueueLens.push_back(resp->queue_len);
         #endif
 

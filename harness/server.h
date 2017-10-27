@@ -28,7 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef CONTROL_WITH_QLEARNING
+#ifdef CONTROL_WITH_QLEARNING //necessary files for q_learning
 
 #include <queue>
 #include <algorithm>
@@ -77,7 +77,7 @@ class Server {
         struct ReqInfo {
             uint64_t id;
             uint64_t startNs;
-            #ifdef CONTROL_WITH_QLEARNING
+            #ifdef CONTROL_WITH_QLEARNING //info for Q learning
 	       uint64_t Qlength;
 	        uint64_t Reqlen;
             uint64_t RecNs; // time when the request is received at the server
@@ -145,26 +145,28 @@ class NetworkedServer : public Server {
         void removeClient(int fd);
         bool checkRecv(int recvd, int expected, int fd);
 
-        #ifdef CONTROL_WITH_QLEARNING
-        int shm_fd, runLength;
+        #ifdef CONTROL_WITH_QLEARNING //variables and constants necessary for Q Learning
+        int server_info_fd;
         int sem_fd;
-        int state_fd;
+        int state_info_fd;
+        int runLength;
         sem_t *sem;
-        void *shm_base;
-        void *state_info_base;
-        int starttime;
+        void *server_info_mem_addr;
+        void *state_info_mem_addr;
+        int starttime; //the start time of each window
         state_info_t state_info;
 
-        const char *name = "server_info";
-        const char *state_name = "state_info";
+        const char *server_info_shm_file_name = "server_info";
+        const char *state_info_shm_file_name = "state_info";
         //const char *sem_name = "sem";
         
-        std::queue<Request*> recvReq_Queue;
-	    std::queue<int> fd_Queue;
-	    std::queue<int> Qlen_Queue;
-        std::queue<uint64_t> rectime_Queue;
-        std::vector<uint64_t> latencies;
-        std::vector<uint64_t> services; 
+        std::queue<Request*> recvReq_Queue; // data structure for holding unprocessed requests
+	    std::queue<int> fd_Queue; //keep record of fd to return for request
+	    std::queue<int> Qlen_Queue; //keep record of queue length when request is received
+        std::queue<uint64_t> rectime_Queue; // keep record of when the request is received
+        //variables for every window
+        std::vector<uint64_t> latencies; //latencies in current window
+        std::vector<uint64_t> services;  //service times in current window
         #endif
 
     public:
@@ -177,11 +179,11 @@ class NetworkedServer : public Server {
         void sendResp(int id, const void* data, size_t size);
         void finish();
         
-        #ifdef CONTROL_WITH_QLEARNING
+        #ifdef CONTROL_WITH_QLEARNING //methods for Q Learning
         int recvReq_Q();
         //for shared memory
 
-        void init_mem();
+        void init_shm();
         void update_mem();
         void update_server_info(unsigned int Qlength, float service_time);
         #endif
