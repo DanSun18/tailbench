@@ -45,8 +45,10 @@
 #include <sys/ipc.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <deque>
 
 typedef struct {
+    unsigned int window_id;
     unsigned int Qlength;
     double service_time;
 } state_info_t;
@@ -154,6 +156,7 @@ class NetworkedServer : public Server {
         void *server_info_mem_addr;
         void *state_info_mem_addr;
         int starttime; //the start time of each window
+        unsigned int current_window_id; 
         state_info_t state_info;
 
         const char *server_info_shm_file_name = "server_info";
@@ -162,7 +165,7 @@ class NetworkedServer : public Server {
         
         std::queue<Request*> recvReq_Queue; // data structure for holding unprocessed requests
 	    std::queue<int> fd_Queue; //keep record of fd to return for request
-	    std::queue<int> Qlen_Queue; //keep record of queue length when request is received
+	    std::deque<unsigned int> Qlen_Queue; //keep record of queue length when request is received
         std::queue<uint64_t> rectime_Queue; // keep record of when the request is received
         //variables for every window
         std::vector<uint64_t> latencies; //latencies in current window

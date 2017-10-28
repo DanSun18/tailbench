@@ -254,7 +254,7 @@ void Client::dumpStats() {
 	out<<' ';
 	out<<svcTimes[r];
 
-    #ifdef CONTROL_WITH_QLEARNING
+    #ifdef CONTROL_WITH_QLEARNING //write queue lens to be analyzed
     //out<<' ';
     //out<<ReqLens[r];
 	out<<' ';
@@ -290,15 +290,15 @@ void Client::dumpAllStats() {
         out << svcTimes[r];
         out << ' ';
         out << sjrnTimes[r];
-	out << ' ';
-	out << startTimes[r];
-        #ifdef CONTROL_WITH_QLEARNING
+		out << ' ';
+		out << startTimes[r];
+        #ifdef CONTROL_WITH_QLEARNING //Write queue lengths, to be analyzed
         out << ' ';
-	out<<QueueLens[r];	
+		out<<QueueLens[r];	
         #endif
         #ifdef PER_REQ_MONITOR
         out << ' ';
-	out << retiredInstrs[r];
+		out << retiredInstrs[r];
         out << ' ';
         out << sktReads[r];
         out << ' ';
