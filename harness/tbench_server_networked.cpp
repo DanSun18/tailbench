@@ -586,6 +586,11 @@ void NetworkedServer::update_mem()
         starttime = curtime;
     }
     //std::cerr << val << std::endl;
+    //print for debugging
+    std::cout << "server_api_obtain(): " << "window_id = " << window_id << "\n"
+        << "\t" << "Qlength = " << Qlength << "\n"
+        << "\t" << "service_time = " << service_time << "\n"
+        << "\t" << "result = " << result << "\n";  
     update_server_info(QL,max_service_time_in_ms);
     memcpy(server_info_mem_addr, &latency_in_ms,sizeof(double));
 
