@@ -85,6 +85,7 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
 
     #ifdef CONTROL_WITH_QLEARNING //initialize starttime variable
     starttime = 0; //when is starttime used? waht is starttime?
+    current_window_id = 0;
     #endif
     // Get address info
     int status;
@@ -253,10 +254,10 @@ int NetworkedServer::recvReq_Q() {
    
     pthread_mutex_lock(&recvLock);
     recvReq_Queue.push(req);
-    int Qlen = recvReq_Queue.size();
+    unsigned int Qlen = recvReq_Queue.size();
 //    std::cerr << "receive req.." << recvReq_Queue.size() << std::endl;
     fd_Queue.push(fd);
-    Qlen_Queue.push(Qlen);
+    Qlen_Queue.push_back(Qlen);
     rectime_Queue.push(getCurNs());
     pthread_cond_signal(&rec_cv);
     pthread_mutex_unlock(&recvLock);
@@ -290,7 +291,7 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     int fd = fd_Queue.front();
     fd_Queue.pop();
     int QL = Qlen_Queue.front();
-    Qlen_Queue.pop();
+    Qlen_Queue.pop_front();
     uint64_t rectime = rectime_Queue.front();
     rectime_Queue.pop();
     uint64_t curNs = getCurNs();
@@ -419,7 +420,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     resp->type = RESPONSE;
     resp->id = reqInfo[id].id;
     resp->len = len;
-    #ifdef CONTROL_WITH_QLEARNING
+    #ifdef CONTROL_WITH_QLEARNING //write queue length into response to send to client
     resp->queue_len = reqInfo[id].Qlength;
     #endif
     memcpy(reinterpret_cast<void*>(&resp->data), data, len);
@@ -497,7 +498,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
         }
     }
     
-    #ifdef CONTROL_WITH_QLEARNING
+    #ifdef CONTROL_WITH_QLEARNING //upate info in shared memory when responsed is sent
     //std::cerr << "resp request " << std::endl;
     latencies.push_back(svcFinishNs-reqInfo[id].RecNs);
     services.push_back(resp->svcNs);
@@ -560,46 +561,51 @@ void NetworkedServer::init_shm()
 
 void NetworkedServer::update_mem()
 {
+    //TODO: change to only update memory every 50ms 
+    //to reduce overhead?
+    unsigned int curtime = getCurNs();
+    if(curtime - starttime < 5e7) return;
+
+    
+    //get 95th percentile latency in ms (round up)
     std::sort(latencies.begin(),latencies.end());
     unsigned int len = latencies.size();
     unsigned int index = (unsigned int) ceil(len*0.95);
     double latency_in_ms = (double)(latencies[index]/1000000.0);
 
+    // get 95 th percentile service time in ms (round up)
     std::sort(services.begin(),services.end());
     len = services.size();
     index = (unsigned int) ceil(len*0.95);
     double max_service_time_in_ms = (double)(services[index]/1000000.0);
 
-    //TODO: change this to reflect the maximum number of requests that a 
-    //request has to wait before it needs to be processed for requests
-    //that are currently in the queue
-    //Idea: for Qlen_Queue, use vector instead of queue?
-    unsigned QL = recvReq_Queue.size(); //current length of the queue
+    // get maximum of queue length when the request arrives for requests currently in the queue
+    std::deque<unsigned int>::iterator max_queue_ptr = std::max_element(
+        recvReq_Queue.begin(), recvReq_Queue.end());
+    unsigned int max_QL = *max_queue_ptr; //current length of the queue
 
-    unsigned int curtime = getCurNs();
-
-
-    if (curtime - starttime > 5e7)
-    {
-        latencies.clear();
-        services.clear();
-        starttime = curtime;
-    }
+    
     //std::cerr << val << std::endl;
     //print for debugging
-    std::cout << "server_api_obtain(): " << "window_id = " << window_id << "\n"
-        << "\t" << "Qlength = " << Qlength << "\n"
-        << "\t" << "service_time = " << service_time << "\n"
-        << "\t" << "result = " << result << "\n";  
-    update_server_info(QL,max_service_time_in_ms);
+    std::cout << "update_mem(): " << "window_id = " << current_window_id << "\n"
+        << "\t" << "Qlength = " << max_QL << "\n"
+        << "\t" << "service_time = " << max_service_time_in_ms << "\n"
+        << "\t" << "latency = " << latency_in_ms << "\n";  
+
+    update_server_info(max_QL,max_service_time_in_ms);
     memcpy(server_info_mem_addr, &latency_in_ms,sizeof(double));
 
-
+    latencies.clear();
+    services.clear();
+    starttime = getCurNs();
 }
 
 
 void NetworkedServer::update_server_info(unsigned int Qlength, float service_time)
 {
+    unsigned int this_window_id = current_window_id;
+    current_window_id++;
+    state_info.window_id = this_window_id;
     state_info.Qlength = Qlength;
     state_info.service_time = service_time;
     memcpy(state_info_mem_addr,&state_info,sizeof(state_info_t));
@@ -677,7 +683,7 @@ void tBenchServerInit(int nthreads) {
     // std::cout << "TESTING: " << nthreads << " threads for server are detected\n";
     server = new NetworkedServer(nthreads, serverurl, serverport, nclients);
     std::cout << "----------Server Started----------" << '\n';
-    #ifdef CONTROL_WITH_QLEARNING
+    #ifdef CONTROL_WITH_QLEARNING //set up the receiver thread for Q_learning
     tBenchSetup_thread();
     #endif
 }
@@ -716,7 +722,7 @@ void tBenchSendResp(const void* data, size_t size) {
     return server->sendResp(tid, data, size);
 }
 
-#ifdef CONTROL_WITH_QLEARNING
+#ifdef CONTROL_WITH_QLEARNING //implementtion of necessary functions for receiver thread
 
 void* receive_thread_func(void *ptr)
 {   
