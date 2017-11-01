@@ -561,8 +561,6 @@ void NetworkedServer::init_shm()
 
 void NetworkedServer::update_mem()
 {
-    //TODO: change to only update memory every 50ms 
-    //to reduce overhead?
     unsigned int curtime = getCurNs();
     if(curtime - starttime < 5e7) return;
 
@@ -587,10 +585,10 @@ void NetworkedServer::update_mem()
     
     //std::cerr << val << std::endl;
     //print for debugging
-    std::cout << "update_mem(): " << "window_id = " << current_window_id << "\n"
-        << "\t" << "Qlength = " << max_QL << "\n"
-        << "\t" << "service_time = " << max_service_time_in_ms << "\n"
-        << "\t" << "latency = " << latency_in_ms << "\n";  
+    // std::cout << "update_mem(): " << "window_id = " << current_window_id << "\n"
+    //     << "\t" << "Qlength = " << max_QL << "\n"
+    //     << "\t" << "service_time = " << max_service_time_in_ms << "\n"
+    //     << "\t" << "latency = " << latency_in_ms << "\n";  
 
     update_server_info(max_QL,max_service_time_in_ms);
     memcpy(server_info_mem_addr, &latency_in_ms,sizeof(double));
