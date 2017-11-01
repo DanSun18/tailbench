@@ -579,7 +579,7 @@ void NetworkedServer::update_mem()
 
     // get maximum of queue length when the request arrives for requests currently in the queue
     std::deque<unsigned int>::iterator max_queue_ptr = std::max_element(
-        recvReq_Queue.begin(), recvReq_Queue.end());
+        Qlen_Queue.begin(), Qlen_Queue.end());
     unsigned int max_QL = *max_queue_ptr; //current length of the queue
 
     
