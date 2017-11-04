@@ -562,7 +562,7 @@ void NetworkedServer::init_shm()
 void NetworkedServer::update_mem()
 {
     unsigned int curtime = getCurNs();
-    if(curtime - starttime < 5e7) return;
+    if(curtime - starttime < 100e6) return;
 
     
     //get 95th percentile latency in ms (round up)
