@@ -632,21 +632,7 @@ pthread_mutex_t createLock;
 void tBenchServerInit(int nthreads) {
     
    	pthread_mutex_init(&createLock, nullptr);
-    cpu_set_t thread_cpu_set;
-    CPU_ZERO(&thread_cpu_set);
-    int meta_thread_core = getOpt<int>("META_THREAD_CORE", 5);
-    CPU_SET(meta_thread_core, &thread_cpu_set);
-    pthread_t thread;
-    thread = pthread_self();
-    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
-    {
-        std::cerr << "pthread_setaffinity_np failed" << '\n';
-        exit(1);
-    }
-
-   // unsigned int coreID = sched_getcpu();
-    // std::cout << "Confirm: Main thread running on " << coreID << '\n';
-
+    
     #ifdef PER_REQ_MONITOR
     std::cout << "----------PCM Starting----------" << '\n'; 
     pcm = PCM::getInstance();
