@@ -729,6 +729,19 @@ int main(int argc, char** argv)
     }
   
     tBenchServerInit(staticData.ThreadCount());
+    //pin this thread to a particular core
+    cpu_set_t thread_cpu_set;
+    CPU_ZERO(&thread_cpu_set);
+    int meta_thread_core = 5;
+    CPU_SET(meta_thread_core, &thread_cpu_set);
+    pthread_t thread;
+    thread = pthread_self();
+    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
+    {
+        std::cerr << "pthread_setaffinity_np failed" << '\n';
+        exit(1);
+    }
+    std::cout << "meta_thread_core pinned to core " << meta_thread_core << '\n';
 
 #ifdef WITH_THREADS
     ThreadPool pool(staticData.ThreadCount());
