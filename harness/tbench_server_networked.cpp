@@ -634,7 +634,23 @@ pthread_mutex_t createLock;
 void tBenchServerInit(int nthreads) {
     
    	pthread_mutex_init(&createLock, nullptr);
-    
+     cpu_set_t thread_cpu_set;
+  
+     CPU_ZERO(&thread_cpu_set);
+     int meta_thread_core = getOpt<int>("META_THREAD_CORE", 1);
+     CPU_SET(meta_thread_core, &thread_cpu_set);
+     pthread_t thread;
+     thread = pthread_self();
+     if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
+     {
+         std::cerr << "pthread_setaffinity_np failed" << '\n';
+         exit(1);
+     } else {
+        std::cerr << "Sucessfully set thread " << thread << " on core " << meta_thread_core << "\n";
+     }
+ 
+    // unsigned int coreID = sched_getcpu();
+     // std::cout << "Confirm: Main thread running on " << coreID << '\n';
     #ifdef PER_REQ_MONITOR
     std::cout << "----------PCM Starting----------" << '\n'; 
     pcm = PCM::getInstance();
@@ -681,7 +697,7 @@ void tBenchServerThreadStart() {
     CPU_ZERO(&thread_cpu_set);
     std::string parsing_text;
     parsing_text = "SERVER_THREAD_" + std::to_string(tid) + "_CORE";
-    int server_thread_core = getOpt<int>(parsing_text.c_str(), 6);
+    int server_thread_core = getOpt<int>(parsing_text.c_str(), 2);
     CPU_SET(server_thread_core, &thread_cpu_set);
     pthread_t thread;
     thread = pthread_self();
@@ -689,6 +705,8 @@ void tBenchServerThreadStart() {
     {
         std::cerr << "pthread_setaffinity_np failed" << '\n';
         exit(1);
+    } else {
+        std::cerr << "Sucessfully set thread " << thread << " on core " << server_thread_core << "\n";
     }
     pthread_mutex_unlock(&createLock);
 }
@@ -729,7 +747,7 @@ void tBenchSetup_thread()
     attr = new pthread_attr_t;
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    int controller_thread_core = getOpt<int>("CONTROLLER_THREAD_CORE", 7);
+    int controller_thread_core = getOpt<int>("CONTROLLER_THREAD_CORE", 0);
     CPU_SET(controller_thread_core,&cpuset);
     pthread_attr_init(attr);
     pthread_attr_setaffinity_np(attr,sizeof(cpu_set_t),&cpuset);

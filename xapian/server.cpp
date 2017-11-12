@@ -8,6 +8,8 @@
 #include "server.h"
 #include "tbench_server.h"
 
+#include <pthread.h>
+
 using namespace std;
 
 unsigned long Server::numReqsToProcess = 0;
@@ -42,6 +44,20 @@ void Server::_run() {
     pthread_barrier_wait(&barrier);
 
     tBenchServerThreadStart();
+
+    cpu_set_t thread_cpu_set;
+    CPU_ZERO(&thread_cpu_set);
+    int server_thread_core = 1;
+    CPU_SET(server_thread_core, &thread_cpu_set);
+    pthread_t thread;
+    thread = pthread_self();
+    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
+    {
+        std::cerr << "pthread_setaffinity_np failed" << '\n';
+        exit(1);
+    } else {
+        std::cerr << "Sucessfully set thread " << thread << " on core " << server_thread_core << "\n";
+    }
 
     while (numReqsProcessed < numReqsToProcess) {
        processRequest();
