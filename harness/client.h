@@ -105,6 +105,7 @@ class Client {
         std::vector<uint64_t> serverTimes; // time the request actually spent on server, including overhead incurred by PCM
         std::vector<uint64_t> serverArrivalTimes; // time request arrived on server (not in queue anymore)
         std::vector<unsigned int> coreIds;
+        std::vector<uint64_t> L3Occupancies;
         #endif
         //choose not to use these anymore even if using dynamic QPS
         //because generation time is recorded
