@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-// #define PER_REQ_MONITOR //uncomment to enable per request monitoring
-#define CONTROL_WITH_QLEARNING //uncomment to run with Q-Learning Controller
+#define PER_REQ_MONITOR //uncomment to enable per request monitoring
+// #define CONTROL_WITH_QLEARNING //uncomment to run with Q-Learning Controller
 
 
 const int MAX_REQ_BYTES = 1 << 20; // 1 MB
@@ -47,6 +47,7 @@ struct Response {
     unsigned long int bytesRead;
     unsigned long int bytesWritten;
     unsigned long int L3MissNum;
+    unsigned long int L3Occupancy;
     double L3HitRate;
     uint64_t serverNs;
     uint64_t arrvNs;

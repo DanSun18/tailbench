@@ -460,14 +460,16 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     unsigned long int bytesWritten = getBytesWrittenToMC(sktstates[id], socket_state);
     unsigned long int L3Miss = getL3CacheMisses(cstates[id], core_state);
     double L3HitRatio = getL3CacheHitRatio(cstates[id], core_state);
-
-    
+    unsigned long int L3Occupancy = getL3CacheOccupancy(core_state);
+  
     resp->coreId = coreID;
     resp->instr = instr;
     resp->bytesRead = bytesRead;
     resp->bytesWritten = bytesWritten;
     resp->L3MissNum = L3Miss;
+    resp->L3Occupancy = L3Occupancy;
     resp->L3HitRate = L3HitRatio;
+
     uint64_t depatureNs = getCurNs();
     assert(depatureNs > reqInfo[id].arrvNs);
     resp->serverNs = depatureNs - reqInfo[id].arrvNs;

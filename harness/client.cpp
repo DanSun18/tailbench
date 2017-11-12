@@ -214,6 +214,7 @@ void Client::finiReq(Response* resp) {
         serverTimes.push_back(resp->serverNs);
         serverArrivalTimes.push_back(resp->arrvNs);
         coreIds.push_back(resp->coreId);
+        L3Occupancies.push_back(resp->L3Occupancy);
         #endif
         //std::cout << "TESTING: " << "finiReq recorded time for id " << resp->id << '\n';
     }
@@ -313,6 +314,8 @@ void Client::dumpAllStats() {
         out << serverArrivalTimes[r];
         out << ' ';
         out << coreIds[r];
+        out << ' ';
+        out << L3Occupancies[r];
         #endif
         out << '\n';
 
