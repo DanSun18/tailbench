@@ -8,6 +8,10 @@ then
 	echo "${BASH_SOURCE[0]} CORES QPS REQUESTS"
 	exit 1
 fi
+
+LD_LIBRARY_PATH=LD_LIBRARY_PATH:${DIR}/xapian-core-1.2.13/install/lib
+export LD_LIBRARY_PATH
+
 NSERVERS=1
 CORES=$1
 QPS=$2
