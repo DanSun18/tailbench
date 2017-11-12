@@ -18,7 +18,7 @@ echo $NSERVERS
 
 #/home/yl408/scripts/bash_scripts/turnoff_HT.sh
 TBENCH_MAXREQS=${REQUESTS} TBENCH_WARMUPREQS=${WARMUPREQS} \
- taskset -c ${CORES}  /home/yl408/tailbench/xapian/xapian_networked_server -n ${NSERVERS} -d ${DATA_ROOT}/xapian/wiki \
+ taskset -c ${CORES}  ${DIR}/xapian_networked_server -n ${NSERVERS} -d ${DATA_ROOT}/xapian/wiki \
     -r 1000000000 &
 echo $! > server.pid
 cat server.pid
