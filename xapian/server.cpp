@@ -44,7 +44,7 @@ void Server::_run() {
     pthread_barrier_wait(&barrier);
 
     tBenchServerThreadStart();
-
+    std::cerr << "Setting thread affinity inside xapian" << "\n";
     cpu_set_t thread_cpu_set;
     CPU_ZERO(&thread_cpu_set);
     int server_thread_core = 1;
@@ -58,6 +58,7 @@ void Server::_run() {
     } else {
         std::cerr << "Sucessfully set thread " << thread << " on core " << server_thread_core << "\n";
     }
+    std::cerr << "finished setting thread affinity in xapian" << "\n";
 
     while (numReqsProcessed < numReqsToProcess) {
        processRequest();
@@ -73,7 +74,9 @@ void Server::processRequest() {
     size_t len = tBenchRecvReq(&termPtr);
     memcpy(reinterpret_cast<void*>(term), termPtr, len);
     term[len] = '\0';
+    #ifdef CONTROL_WITH_QLEARNING
     tBench_deleteReq();
+    #endif
     //std::cerr << "reach here ! " << std::endl;
     unsigned int flags = Xapian::QueryParser::FLAG_DEFAULT;
     Xapian::Query query = parser.parse_query(term, flags);
