@@ -18,7 +18,7 @@ QPS=$2
 WARMUPREQS=500
 REQUESTS=$3
 
-echo $NSERVERS 
+echo "NSERVERS = ${NSERVERS}" 
 
 #/home/yl408/scripts/bash_scripts/turnoff_HT.sh
 TBENCH_MAXREQS=${REQUESTS} TBENCH_WARMUPREQS=${WARMUPREQS} \
@@ -27,4 +27,5 @@ TBENCH_MAXREQS=${REQUESTS} TBENCH_WARMUPREQS=${WARMUPREQS} \
 echo $! > server.pid
 cat server.pid
 sudo chrt -f -p 99 $(cat server.pid)
-rm server.pid                      
+wait $(cat server.pid)
+rm -f server.pid 
