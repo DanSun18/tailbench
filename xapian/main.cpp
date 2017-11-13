@@ -57,6 +57,9 @@ int main(int argc, char* argv[]) {
         }
     }
     
+    std::cerr << "numServers = " << numServers << "\n"
+        << "dbPath = " << dbPath << "\n"
+        << "numReqsToProcess = " numReqsToProcess << "\n";
     // cpu_set_t cpuset;
     // CPU_ZERO(&cpuset);
     // CPU_SET(2,&cpuset);
