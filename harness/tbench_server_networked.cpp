@@ -47,18 +47,8 @@
 /*******************************************************************************
  * NetworkedServer
  *******************************************************************************/
- #ifdef CONTROL_WITH_QLEARNING //addtional variables for Q Learning
- std::queue<Request> get_Queue() { //posibily never used?
-    std::queue<Request> Q;
-    return Q;
- }
 
-pthread_t* receive_thread;
-pthread_attr_t *attr;
-Request *global_req;
 
-pthread_cond_t rec_cv;
-#endif
 
 NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
         int nclients) 
@@ -68,7 +58,7 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
     pthread_mutex_init(&recvLock, nullptr);
 
     #ifdef CONTROL_WITH_QLEARNING //initialize conditional variable for q learning
-    pthread_cond_init(&rec_cv,nullptr);
+    pthread_cond_init(&receiverCv,nullptr);
     #endif
 
     #ifdef PER_REQ_MONITOR
@@ -198,15 +188,18 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
     return success;
 }
 
+/*
+    Method in the loop body of the receiver thread
+    return false if there is nothing in the clientFd, true otherwise
+*/
 
-#ifdef CONTROL_WITH_QLEARNING // method for the receiver thread
-int NetworkedServer::recvReq_Q() {
+bool NetworkedServer::putReqInQueue() {  
 
     bool success = false;
     Request *req = new Request;
     int fd = -1;
 //    std::cerr << "server wants to recv req" << std::endl;
-    while(!success && clientFds.size() > 0) {
+    while(!success && clientFds.size() > 0) { //read request from socket
         int maxFd = -1;
         fd_set readSet;
         FD_ZERO(&readSet);
@@ -237,7 +230,7 @@ int NetworkedServer::recvReq_Q() {
 
         assert(fd != -1);
 
-        //process head first
+        //process header first
         int header_len = sizeof(Request) - MAX_REQ_BYTES;
         int recvd = recvfull(fd, reinterpret_cast<char*>(req), header_len, 0);
         success = checkRecv(recvd, header_len, fd);
@@ -253,24 +246,17 @@ int NetworkedServer::recvReq_Q() {
     }
    
     pthread_mutex_lock(&recvLock);
-    recvReq_Queue.push(req);
-    unsigned int Qlen = recvReq_Queue.size();
-//    std::cerr << "receive req.." << recvReq_Queue.size() << std::endl;
-    fd_Queue.push(fd);
-    Qlen_Queue.push_back(Qlen);
-    rectime_Queue.push(getCurNs());
-    pthread_cond_signal(&rec_cv);
+    reqQueue.push(req);
+    unsigned int reqQueueLength = reqQueue.size();
+//  std::cerr << "receive req.." << reqQueue.size() << std::endl;
+    fds.push(fd);
+    reqQueueLengths.push_back(reqQueueLength);
+    reqReceivingTimes.push(getCurNs());
+    pthread_cond_signal(&receiverCv);
     pthread_mutex_unlock(&recvLock);
-    if (clientFds.size() == 0) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
 
+    return clientFds.size() > 0;
 }
-
-#endif
 
 //arguments: id is thread id
 #ifdef CONTROL_WITH_QLEARNING //determine which recvReq() method to use
@@ -278,22 +264,22 @@ size_t NetworkedServer::recvReq(int id, void** data) {
 
   //  std::cerr << "reach here 1 " <<std::endl;
     pthread_mutex_lock(&recvLock);
-  //  std::cerr << "reach here 2 " << recvReq_Queue.empty()<<std::endl;
-    while(recvReq_Queue.empty())
+  //  std::cerr << "reach here 2 " << reqQueue.empty()<<std::endl;
+    while(reqQueue.empty())
     {
-//	std::cerr << recvReq_Queue.size() << std::endl;
-	 pthread_cond_wait(&rec_cv,&recvLock);
+//	std::cerr << reqQueue.size() << std::endl;
+	 pthread_cond_wait(&receiverCv,&recvLock);
     }
  //   std::cerr << "reach here 3 " << std::endl;
-    Request *req = recvReq_Queue.front();
-    recvReq_Queue.pop();
+    Request *req = reqQueue.front();
+    reqQueue.pop();
    // std::cerr << "recv req "<<req->id << std::endl;    
-    int fd = fd_Queue.front();
-    fd_Queue.pop();
-    int QL = Qlen_Queue.front();
-    Qlen_Queue.pop_front();
-    uint64_t rectime = rectime_Queue.front();
-    rectime_Queue.pop();
+    int fd = fds.front();
+    fds.pop();
+    int QL = reqQueueLengths.front();
+    reqQueueLengths.pop_front();
+    uint64_t rectime = reqReceivingTimes.front();
+    reqReceivingTimes.pop();
     uint64_t curNs = getCurNs();
     reqInfo[id].id = req->id;
     reqInfo[id].startNs = curNs;
@@ -371,15 +357,15 @@ size_t NetworkedServer::recvReq(int id, void** data) {
         // When start to process each request, note down counter states with performance counter
         //find out core id current thread is on
         
-        unsigned int coreID = sched_getcpu();
+        unsigned int coreId = sched_getcpu();
         unsigned int socketID = 0; //it would be better for the thread to figure this out too
                             //but now using constant assuming it's always going to be 1
         //for debugging why instr and L3Miss sometimes ~= 2^64
         // std::cout << std::string("Thread ") << id << std::string(": received request ") << req->id << '\n';
-        // std::cout << "\toperating on core " << coreID << '\n';
+        // std::cout << "\toperating on core " << coreId << '\n';
 
         pthread_mutex_lock(&pcmLock);
-        CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+        CoreCounterState core_state = pcm->getCoreCounterState(coreId);
         SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
         pthread_mutex_unlock(&pcmLock);
         cstates[id] = core_state;
@@ -436,17 +422,17 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     #ifdef PER_REQ_MONITOR
     // finishing up request, find counter parameters
       //find out core id current thread is on
-    unsigned int coreID = sched_getcpu();
+    unsigned int coreId = sched_getcpu();
     unsigned int socketID = 0; //it would be better for the thread to figure this out too
                            //but now using constant assuming it's always going to be 1
 
     //for debugging why instr and L3Miss sometimes ~= 2^64
     // std::cout << "Thread " << id << ": sending response " << resp->id << '\n';
-    // std::cout << "\toperating on core " <<  coreID << '\n';
+    // std::cout << "\toperating on core " <<  coreId << '\n';
 
 
     pthread_mutex_lock(&pcmLock);
-    CoreCounterState core_state = pcm->getCoreCounterState(coreID);
+    CoreCounterState core_state = pcm->getCoreCounterState(coreId);
     SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
     pthread_mutex_unlock(&pcmLock);
 
@@ -462,7 +448,7 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     double L3HitRatio = getL3CacheHitRatio(cstates[id], core_state);
     unsigned long int L3Occupancy = getL3CacheOccupancy(core_state);
   
-    resp->coreId = coreID;
+    resp->coreId = coreId;
     resp->instr = instr;
     resp->bytesRead = bytesRead;
     resp->bytesWritten = bytesWritten;
@@ -581,7 +567,7 @@ void NetworkedServer::update_mem()
 
     // get maximum of queue length when the request arrives for requests currently in the queue
     std::deque<unsigned int>::iterator max_queue_ptr = std::max_element(
-        Qlen_Queue.begin(), Qlen_Queue.end());
+        reqQueueLengths.begin(), reqQueueLengths.end());
     unsigned int max_QL = *max_queue_ptr; //current length of the queue
 
     
@@ -616,16 +602,18 @@ void NetworkedServer::update_server_info(unsigned int Qlength, float service_tim
  * Per-thread State
  *******************************************************************************/
 __thread int tid;
-//__thread int coreId;
 
 /*******************************************************************************
  * Global data
  *******************************************************************************/
 std::atomic_int curTid;
 NetworkedServer* server;
-// cpu_set_t cpuset_global;
-pthread_mutex_t createLock;
+pthread_mutex_t threadCreateLock;
+//for receiver thread
+pthread_t* receiverThread;
 
+Request *global_req;
+pthread_cond_t receiverCv;
 
 
 /*******************************************************************************
@@ -633,49 +621,53 @@ pthread_mutex_t createLock;
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
     
-   	pthread_mutex_init(&createLock, nullptr);
-     cpu_set_t thread_cpu_set;
-  
-     CPU_ZERO(&thread_cpu_set);
-     int meta_thread_core = getOpt<int>("META_THREAD_CORE", 1);
-     CPU_SET(meta_thread_core, &thread_cpu_set);
-     pthread_t thread;
-     thread = pthread_self();
-     if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
-     {
-         std::cerr << "pthread_setaffinity_np failed" << '\n';
-         exit(1);
-     } else {
-        std::cerr << "Sucessfully set thread " << thread << " on core " << meta_thread_core << "\n";
-     }
- 
-    // unsigned int coreID = sched_getcpu();
-     // std::cout << "Confirm: Main thread running on " << coreID << '\n';
-    #ifdef PER_REQ_MONITOR
-    std::cout << "----------PCM Starting----------" << '\n'; 
-    pcm = PCM::getInstance();
-    pcm->resetPMU();
-    PCM::ErrorCode status = pcm->program();
-    switch (status)
+   	pthread_mutex_init(&threadCreateLock, nullptr); //initate lock for creating threads
+
+    //set core for meta-thread (current thread) 
+    //parse envrionmental variable, if given   
+    cpu_set_t metaThreadCpuSet;  
+    CPU_ZERO(&metaThreadCpuSet);
+    int meta_thread_core = getOpt<int>("META_THREAD_CORE", 7);
+    CPU_SET(meta_thread_core, &metaThreadCpuSet);
+    //set current thread to core according to environment variable
+    pthread_t thread;
+    thread = pthread_self();
+    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &metaThreadCpuSet) != 0)
     {
-    case PCM::Success:
-        break;
-    case PCM::MSRAccessDenied:
-        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (no MSR or PCI CFG space access)." << std::endl;
-        exit(EXIT_FAILURE);
-    case PCM::PMUBusy:
-        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Performance Monitoring Unit is occupied by other application). Try to stop the application that uses PMU." << std::endl;
-        std::cerr << "Alternatively you can try running Intel PCM with option -r to reset PMU configuration at your own risk." << std::endl;
-        exit(EXIT_FAILURE);
-    default:
-        std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << std::endl;
-        exit(EXIT_FAILURE);
+        std::cerr << "pthread_setaffinity_np failed" << '\n';
+        exit(1);
+    } else {
+        std::cerr << "Sucessfully set thread " << thread << " on core " << meta_thread_core << "\n";
     }
-    std::cerr << "\nDetected " << pcm->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << pcm->getUArchCodename() << "\"" << std::endl;
-    
-    // const int cpu_model = pcm->getCPUModel();
-    std::cout << "---------PCM Started----------" << '\n';
-    #endif
+    //reporting meta-thread affinity to user
+    unsigned int coreId = sched_getcpu();
+    std::cout << "Confirmation: Meta thread running on core " << coreId << '\n';
+
+    #ifdef PER_REQ_MONITOR //If the user wants per request monitor, start the pcm
+        std::cout << "----------PCM Starting----------" << '\n'; 
+        pcm = PCM::getInstance();
+        pcm->resetPMU();
+        PCM::ErrorCode status = pcm->program();
+        switch (status)
+        {
+        case PCM::Success:
+            break;
+        case PCM::MSRAccessDenied:
+            std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (no MSR or PCI CFG space access)." << std::endl;
+            exit(EXIT_FAILURE);
+        case PCM::PMUBusy:
+            std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Performance Monitoring Unit is occupied by other application). Try to stop the application that uses PMU." << std::endl;
+            std::cerr << "Alternatively you can try running Intel PCM with option -r to reset PMU configuration at your own risk." << std::endl;
+            exit(EXIT_FAILURE);
+        default:
+            std::cerr << "Access to Intel(r) Performance Counter Monitor has denied (Unknown error)." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        std::cerr << "\nDetected " << pcm->getCPUBrandString() << " \"Intel(r) microarchitecture codename " << pcm->getUArchCodename() << "\"" << std::endl;
+        
+        // const int cpu_model = pcm->getCPUModel();
+        std::cout << "---------PCM Started----------" << '\n';
+    #endif //PER_REQ_MONITOR
 
     std::cout << "----------Server Starting----------" << '\n';
     curTid = 0;
@@ -685,13 +677,12 @@ void tBenchServerInit(int nthreads) {
     // std::cout << "TESTING: " << nthreads << " threads for server are detected\n";
     server = new NetworkedServer(nthreads, serverurl, serverport, nclients);
     std::cout << "----------Server Started----------" << '\n';
-    #ifdef CONTROL_WITH_QLEARNING //set up the receiver thread for Q_learning
-    tBenchSetup_thread();
-    #endif
+    setupReceiverThread();
+    std::cout << "----------Receiver thread set up----------" << '\n';
 }
 
 void tBenchServerThreadStart() {
-    pthread_mutex_lock(&createLock);
+    pthread_mutex_lock(&threadCreateLock);
     tid = curTid++;
     cpu_set_t thread_cpu_set;
     CPU_ZERO(&thread_cpu_set);
@@ -708,7 +699,7 @@ void tBenchServerThreadStart() {
     } else {
         std::cerr << "Sucessfully set thread " << thread << " on core " << server_thread_core << "\n";
     }
-    pthread_mutex_unlock(&createLock);
+    pthread_mutex_unlock(&threadCreateLock);
 }
 
 void tBenchServerFinish() {
@@ -726,32 +717,41 @@ void tBenchSendResp(const void* data, size_t size) {
     return server->sendResp(tid, data, size);
 }
 
-#ifdef CONTROL_WITH_QLEARNING //implementtion of necessary functions for receiver thread
 
-void* receive_thread_func(void *ptr)
+/*******************************************************************************
+ * Receiver thread 
+ *******************************************************************************/
+
+
+void* receiverThreadFunc(void *ptr)
 {   
     NetworkedServer *server = (NetworkedServer*)ptr;
-    int ret_val = 1;
+    bool fdAvailable = true;
 
-    while(ret_val) 
+    while(fdAvailable) 
     {
-        ret_val = server->recvReq_Q();
+        fdAvailable = server->putReqInQueue();
     }
 
     return 0;
 }
 
-void tBenchSetup_thread()
+void setupReceiverThread()
 {
-    receive_thread = new pthread_t;
-    attr = new pthread_attr_t;
+    //set up receiver thread object
+    receiverThread = new pthread_t;
+    //parse intended receiver thread core from environment variable
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    int controller_thread_core = getOpt<int>("CONTROLLER_THREAD_CORE", 0);
-    CPU_SET(controller_thread_core,&cpuset);
+    int receiverThreadCore = getOpt<int>("RECEIVER_THREAD_CORE", 6);
+    CPU_SET(receiverThreadCore,&cpuset);
+    //intialize attr object with intended thread affinity
+    pthread_attr_t *attr;
+    attr = new pthread_attr_t;
     pthread_attr_init(attr);
     pthread_attr_setaffinity_np(attr,sizeof(cpu_set_t),&cpuset);
-    pthread_create(receive_thread, attr, receive_thread_func, (void *)server);
+    //create the receiver thread
+    pthread_create(receiverThread, attr, receiverThreadFunc, (void *)server);
   
 }
 
@@ -761,9 +761,10 @@ void tBench_deleteReq()
     delete global_req;
 }
 
+#ifdef CONTROL_WITH_QLEARNING //implementaion of necessary functions for receiver thread
 void tBench_join() 
 {   
-    pthread_join(*receive_thread,NULL);
+    pthread_join(*receiverThread,NULL);
 }
 
 #else

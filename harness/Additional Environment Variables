@@ -1,0 +1,5 @@
+Additional Environment Variables
+
+META_THREAD_CORE : set cpu affinity of the meta thread to a particular logical core. Default to 7
+
+RECEIVER_THREAD_CORE: set cpu affinity of the receiver thread to a particular logical core. Default to 6
