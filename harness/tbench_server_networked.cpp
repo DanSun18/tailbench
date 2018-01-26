@@ -43,6 +43,21 @@
 
 #include <sched.h> //for sched_getcpu
 
+/*******************************************************************************
+ * Per-thread State
+ *******************************************************************************/
+__thread int tid;
+
+/*******************************************************************************
+ * Global data
+ *******************************************************************************/
+std::atomic_int curTid;
+NetworkedServer* server;
+pthread_mutex_t threadCreateLock;
+//for receiver thread
+pthread_t* receiverThread;
+pthread_cond_t receiverCv;
+
 /***********************
 * helpers
 *********************/
@@ -513,22 +528,6 @@ void NetworkedServer::update_server_info(unsigned int queueLength, float service
 }
 
 #endif
-/*******************************************************************************
- * Per-thread State
- *******************************************************************************/
-__thread int tid;
-
-/*******************************************************************************
- * Global data
- *******************************************************************************/
-std::atomic_int curTid;
-NetworkedServer* server;
-pthread_mutex_t threadCreateLock;
-//for receiver thread
-pthread_t* receiverThread;
-
-pthread_cond_t receiverCv;
-
 
 /*******************************************************************************
  * API

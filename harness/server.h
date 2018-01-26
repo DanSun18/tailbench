@@ -72,14 +72,15 @@ typedef struct {
 PCM * pcm;
 #endif //PER_REQ_MONITOR
 
-/****
+/****************************************
 * Function prototypes
-******/
+******************************************/
 void setupReceiverThread();
 void* receiverThreadFunc(void *ptr);
-/************
-* Server APIs
-*************/
+
+/******************************************
+* Server
+********************************************/
 class Server { 
     protected://look at this later when we know what each field means
 
@@ -137,7 +138,7 @@ class NetworkedServer : public Server {
         std::vector<int> clientFds;
         std::vector<int> activeFds; // Currently active client fds for 
                                     // each thread
-        
+
         //queues to hold information for pending requests
         std::queue<Request*> pendingReqs; // data structure for holding unprocessed requests
         std::queue<int> fds; //keep record of fd to return for request
@@ -160,8 +161,6 @@ class NetworkedServer : public Server {
         // Helper Functions
         void removeClient(int fd);
         bool checkRecv(int recvd, int expected, int fd);
-
-        
 
         #ifdef CONTROL_WITH_QLEARNING //variables and constants necessary for Q Learning
         //major refactor/rename needed 
