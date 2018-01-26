@@ -51,10 +51,10 @@ struct Response {
     double L3HitRate;
     uint64_t serverNs;
     uint64_t arrvNs;
-    #endif
+    #endif //PER_REQ_MONITOR
     size_t len;
     size_t queueLength;
     char data[MAX_RESP_BYTES];
 };
 
-#endif
+#endif //__MSGS_H

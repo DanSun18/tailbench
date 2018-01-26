@@ -54,8 +54,6 @@ typedef struct {
 } current_window_info_t;
 #endif //CONTROL_WITH_QLEARNING
 
-
-
 #ifdef PER_REQ_MONITOR
 #include <unistd.h>
 #include <signal.h>   // for atexit()
@@ -132,7 +130,8 @@ class NetworkedServer : public Server {
         pthread_mutex_t recvLock;
         #ifdef PER_REQ_MONITOR
         pthread_mutex_t pcmLock;
-        #endif
+        #endif //PER_REQ_MONITOR
+        
         Request *reqbuf; // One for each server thread
 
         std::vector<int> clientFds;
@@ -191,9 +190,6 @@ class NetworkedServer : public Server {
         void sendResp(int id, const void* data, size_t size);
         void finish();
         
-
-        
-        
         //for shared memory
         #ifdef CONTROL_WITH_QLEARNING //methods for Q Learning
         void initShm();
@@ -202,4 +198,4 @@ class NetworkedServer : public Server {
         #endif
 };
 
-#endif
+#endif //__SERVER_H
