@@ -99,8 +99,6 @@ static int recvfull(int fd, char* msg, int len, int flags) {
     return (len - remaining);
 }
 
-static void 
-
 
 
 #endif
