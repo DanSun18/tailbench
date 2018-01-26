@@ -39,7 +39,6 @@ void tbenchMigrateReceiverThread();
 
 void tBenchWaitForReceiver();
 
-void tBench_deleteReq();
 #ifdef __cplusplus 
 }
 #endif

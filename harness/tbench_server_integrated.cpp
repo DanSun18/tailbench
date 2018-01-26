@@ -122,11 +122,10 @@ void tBenchSendResp(const void* data, size_t size) {
     return server->sendResp(tid, data, size);
 }
 
-void tBenchSetup_thread()
-{}
+void tbenchMigrateReceiverThread(){
+    //do nothing
+}
 
-void tBench_join()
-{}
-
-void tBench_deleteReq()
-{}
+void tBenchWaitForReceiver(){
+    //do nothing
+}

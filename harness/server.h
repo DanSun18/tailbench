@@ -74,6 +74,14 @@ typedef struct {
 PCM * pcm;
 #endif //PER_REQ_MONITOR
 
+/****
+* Function prototypes
+******/
+void setupReceiverThread();
+void* receiverThreadFunc(void *ptr);
+/************
+* Server APIs
+*************/
 class Server { 
     protected://look at this later when we know what each field means
 
@@ -178,16 +186,17 @@ class NetworkedServer : public Server {
         NetworkedServer(int nthreads, std::string ip, int port, int nclients);
         ~NetworkedServer();
 
-        
+        int putReqInQueue();
         size_t recvReq(int id, void** data);
         void sendResp(int id, const void* data, size_t size);
         void finish();
         
-        #ifdef CONTROL_WITH_QLEARNING //methods for Q Learning
-        int recvReq_Q();
-        //for shared memory
 
-        void initShm;
+        
+        
+        //for shared memory
+        #ifdef CONTROL_WITH_QLEARNING //methods for Q Learning
+        void initShm();
         void update_mem();
         void update_server_info(unsigned int queueLength, float service_time);
         #endif

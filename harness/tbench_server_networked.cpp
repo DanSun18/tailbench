@@ -309,7 +309,6 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     *data = reinterpret_cast<void*>(req->data);
     size_t len = req->len;
     //reqInfo[id].reqlen = len;
-    global_req = req;
     pthread_mutex_unlock(&recvLock);
     return len;
     
@@ -528,7 +527,6 @@ pthread_mutex_t threadCreateLock;
 //for receiver thread
 pthread_t* receiverThread;
 
-Request *global_req;
 pthread_cond_t receiverCv;
 
 
@@ -631,11 +629,6 @@ halt meta-thread to wait for receiver to finish
 void tBenchWaitForReceiver() {   
     pthread_join(*receiverThread,NULL);
     std::cerr << "Meta-thread waiting for receiver thread" << '\n';
-}
-
-void tBench_deleteReq() 
-{
-    delete global_req;
 }
 
 
