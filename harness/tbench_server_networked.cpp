@@ -19,10 +19,8 @@
 #include <algorithm>
 #include <atomic>
 #include <vector>
-
 #include "helpers.h"
 #include "server.h"
-
 #include <assert.h>
 #include <errno.h>
 #include <netinet/tcp.h>
@@ -33,14 +31,12 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <sstream>
 #include <string>
-
 #include <sched.h> //for sched_getcpu
 
 /*******************************************************************************
@@ -58,9 +54,9 @@ pthread_mutex_t threadCreateLock;
 pthread_t* receiverThread;
 pthread_cond_t receiverCv;
 
-/***********************
+/*****************************************************************
 * helpers
-*********************/
+*****************************************************************/
 /**
 Change the thread affinity of the given thread to core specified by coreId
 **/
