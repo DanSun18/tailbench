@@ -43,6 +43,24 @@
 
 #include <sched.h> //for sched_getcpu
 
+/***********************
+* helpers
+*********************/
+/**
+Change the thread affinity of the given thread to core specified by coreId
+**/
+void pinThreadTo(pthread_t thread, int coreId){
+	cpu_set_t cpuSet;  
+    CPU_ZERO(&cpuSet);
+    CPU_SET(coreId, &cpuSet);
+    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuSet) != 0)
+    {
+        std::cerr << "pinThreadTo: pthread_setaffinity_np failed" << '\n';
+        exit(1);
+    } else {
+        std::cerr << "Sucessfully set thread " << thread << " on core " << coreId << "\n";
+    }
+}
 
 /*******************************************************************************
  * NetworkedServer
@@ -54,34 +72,37 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
         int nclients) 
     : Server(nthreads)
 {
+    //initailize locks
     pthread_mutex_init(&sendLock, nullptr);
     pthread_mutex_init(&recvLock, nullptr);
-
-    #ifdef CONTROL_WITH_QLEARNING //initialize conditional variable for q learning
-    pthread_cond_init(&receiverCv,nullptr);
-    #endif
-
-    #ifdef PER_REQ_MONITOR
-    pthread_mutex_init(&pcmLock, nullptr);
-    #endif
+    //create or resize data structures based on the number of server threads
     reqbuf = new Request[nthreads]; 
-
     activeFds.resize(nthreads);
-    #ifdef PER_REQ_MONITOR
-    cstates.resize(nthreads);
-    sktstates.resize(nthreads);
-    #endif
+    //initialize recvClientHead
     recvClientHead = 0;
 
-    #ifdef CONTROL_WITH_QLEARNING //initialize starttime variable
+    #ifdef CONTROL_WITH_QLEARNING 
+    //initialize conditional variable for q learning
+    pthread_cond_init(&receiverCv,nullptr);
+    //initailize bookkeeping data for Q-Learning Controller
     starttime = 0; //when is starttime used? waht is starttime?
     current_window_id = 0;
-    #endif
-    // Get address info
+    #endif //CONTROL_WITH_QLEARNING
+
+    #ifdef PER_REQ_MONITOR
+    //initialize pcm lock
+    pthread_mutex_init(&pcmLock, nullptr);
+    //resize vectors for counter data
+    cstates.resize(nthreads);
+    sktstates.resize(nthreads);
+    #endif //PER_REQ_MONITOR
+
+    
+    //declare variables needed
     int status;
     struct addrinfo hints;
     struct addrinfo* servInfo;
-
+    //set up connection type
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
@@ -151,8 +172,8 @@ NetworkedServer::NetworkedServer(int nthreads, std::string ip, int port, \
 
         clientFds.push_back(clientFd);
         #ifdef CONTROL_WITH_QLEARNING //initialize shared memory for Q Learning
-        init_shm();
-        #endif
+        initShm();
+        #endif //CONTROL_WITH_QLEARNING
     }
 }
 
@@ -246,11 +267,11 @@ bool NetworkedServer::putReqInQueue() {
     }
    
     pthread_mutex_lock(&recvLock);
-    reqQueue.push(req);
-    unsigned int reqQueueLength = reqQueue.size();
-//  std::cerr << "receive req.." << reqQueue.size() << std::endl;
+    pendingReqs.push(req);
+    unsigned int reqQueueLength = pendingReqs.size();
+//  std::cerr << "receive req.." << pendingReqs.size() << std::endl;
     fds.push(fd);
-    reqQueueLengths.push_back(reqQueueLength);
+    queueLengths.push_back(reqQueueLength);
     reqReceivingTimes.push(getCurNs());
     pthread_cond_signal(&receiverCv);
     pthread_mutex_unlock(&recvLock);
@@ -259,32 +280,31 @@ bool NetworkedServer::putReqInQueue() {
 }
 
 //arguments: id is thread id
-#ifdef CONTROL_WITH_QLEARNING //determine which recvReq() method to use
 size_t NetworkedServer::recvReq(int id, void** data) {
 
   //  std::cerr << "reach here 1 " <<std::endl;
     pthread_mutex_lock(&recvLock);
-  //  std::cerr << "reach here 2 " << reqQueue.empty()<<std::endl;
-    while(reqQueue.empty())
+  //  std::cerr << "reach here 2 " << pendingReqs.empty()<<std::endl;
+    while(pendingReqs.empty())
     {
-//	std::cerr << reqQueue.size() << std::endl;
+//	std::cerr << pendingReqs.size() << std::endl;
 	 pthread_cond_wait(&receiverCv,&recvLock);
     }
  //   std::cerr << "reach here 3 " << std::endl;
-    Request *req = reqQueue.front();
-    reqQueue.pop();
+    Request *req = pendingReqs.front();
+    pendingReqs.pop();
    // std::cerr << "recv req "<<req->id << std::endl;    
     int fd = fds.front();
     fds.pop();
-    int QL = reqQueueLengths.front();
-    reqQueueLengths.pop_front();
-    uint64_t rectime = reqReceivingTimes.front();
+    int queueLength = queueLengths.front();
+    queueLengths.pop_front();
+    uint64_t recvTime = reqReceivingTimes.front();
     reqReceivingTimes.pop();
     uint64_t curNs = getCurNs();
     reqInfo[id].id = req->id;
     reqInfo[id].startNs = curNs;
-    reqInfo[id].Qlength = QL;
-    reqInfo[id].RecNs = rectime;
+    reqInfo[id].queueLength = queueLength;
+    reqInfo[id].recvNs = recvTime;
     activeFds[id] = fd;
     *data = reinterpret_cast<void*>(req->data);
     size_t len = req->len;
@@ -294,130 +314,26 @@ size_t NetworkedServer::recvReq(int id, void** data) {
     return len;
     
 }
-#else
-size_t NetworkedServer::recvReq(int id, void** data) {
-    pthread_mutex_lock(&recvLock);
-
-    bool success = false;
-    Request* req;
-    int fd = -1;
-    while (!success && clientFds.size() > 0) {
-        int maxFd = -1;
-        fd_set readSet;
-        FD_ZERO(&readSet);
-        for (int f : clientFds) {
-            FD_SET(f, &readSet);
-            if (f > maxFd) maxFd = f;
-        }
-	
-        int ret = select(maxFd + 1, &readSet, nullptr, nullptr, nullptr);
-        if (ret == -1) {
-            std::cerr << "select() failed: " << strerror(errno) << std::endl;
-            exit(-1);
-        }
-        fd = -1;
-        for (size_t i = 0; i < clientFds.size(); ++i) {
-            size_t idx = (recvClientHead + i) % clientFds.size();
-            if (FD_ISSET(clientFds[idx], &readSet)) {
-                fd = clientFds[idx];
-                break;
-            }
-        }
-
-        recvClientHead = (recvClientHead + 1) % clientFds.size();
-
-        assert(fd != -1);
-
-        int len = sizeof(Request) - MAX_REQ_BYTES; // Read request header first
-
-        req = &reqbuf[id];
-	
-	//std::cerr<<"begin recv full...."<<std::endl;
-        int recvd = recvfull(fd, reinterpret_cast<char*>(req), len, 0);
-       // std::cerr<<"end recv full...."<<std::endl;
-        success = checkRecv(recvd, len, fd);
-	//std::cerr << "first check "<<success << std::endl;
-        if (!success) continue;
-        
-        recvd = recvfull(fd, req->data, req->len, 0);
-        //std::cerr << "second check "<<success << std::endl;
-        success = checkRecv(recvd, req->len, fd);
-        if (!success) continue;
-    }
-     //std::cerr<<"finish retreive request from client port..."<<std::endl;
-
-    if (clientFds.size() == 0) {
-        std::cerr << "All clients exited. Server finishing" << std::endl;
-        exit(0);
-    } else {
-        
-        
-        #ifdef PER_REQ_MONITOR
-        uint64_t arrvNs = getCurNs();
-        // When start to process each request, note down counter states with performance counter
-        //find out core id current thread is on
-        
-        unsigned int coreId = sched_getcpu();
-        unsigned int socketID = 0; //it would be better for the thread to figure this out too
-                            //but now using constant assuming it's always going to be 1
-        //for debugging why instr and L3Miss sometimes ~= 2^64
-        // std::cout << std::string("Thread ") << id << std::string(": received request ") << req->id << '\n';
-        // std::cout << "\toperating on core " << coreId << '\n';
-
-        pthread_mutex_lock(&pcmLock);
-        CoreCounterState core_state = pcm->getCoreCounterState(coreId);
-        SocketCounterState socket_state = pcm->getSocketCounterState(socketID);
-        pthread_mutex_unlock(&pcmLock);
-        cstates[id] = core_state;
-        sktstates[id] = socket_state;
-        #endif
-
-        *data = reinterpret_cast<void*>(&req->data);
-
-        
-        uint64_t startNs = getCurNs();
-        reqInfo[id].id = req->id;
-        reqInfo[id].startNs = startNs;
-        activeFds[id] = fd;
-
-        #ifdef PER_REQ_MONITOR
-        reqInfo[id].arrvNs = arrvNs;
-        #endif
-        
-    }
-
-    pthread_mutex_unlock(&recvLock);
-
-    return req->len;
-};
-#endif
-
 
 void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     pthread_mutex_lock(&sendLock);
-
-    Response* resp = new Response();
     
     #ifdef CONTROL_WITH_QLEARNING // set starttime when server sends the first response out
     if (starttime == 0)
         starttime = getCurNs();
     #endif
 
+    uint64_t svcFinishNs = getCurNs();
+    assert(svcFinishNs > reqInfo[id].startNs);
+    //copy book-keeping data to response
+    Response* resp = new Response();
     resp->type = RESPONSE;
     resp->id = reqInfo[id].id;
     resp->len = len;
-    #ifdef CONTROL_WITH_QLEARNING //write queue length into response to send to client
-    resp->queue_len = reqInfo[id].Qlength;
-    #endif
-    memcpy(reinterpret_cast<void*>(&resp->data), data, len);
-
-    
-
-    uint64_t svcFinishNs = getCurNs();
-    assert(svcFinishNs > reqInfo[id].startNs);
+    resp->queueLength = reqInfo[id].queueLength;
     resp->svcNs = svcFinishNs - reqInfo[id].startNs;
     resp->startNs = reqInfo[id].startNs;
-
+    memcpy(reinterpret_cast<void*>(&resp->data), data, len);
 
     #ifdef PER_REQ_MONITOR
     // finishing up request, find counter parameters
@@ -488,8 +404,8 @@ void NetworkedServer::sendResp(int id, const void* data, size_t len) {
     
     #ifdef CONTROL_WITH_QLEARNING //upate info in shared memory when responsed is sent
     //std::cerr << "resp request " << std::endl;
-    latencies.push_back(svcFinishNs-reqInfo[id].RecNs);
-    services.push_back(resp->svcNs);
+    window_latencies.push_back(svcFinishNs-reqInfo[id].recvNs);
+    window_service_times.push_back(resp->svcNs);
     update_mem();
     #endif
 
@@ -516,15 +432,17 @@ void NetworkedServer::finish() {
 }
 
 #ifdef CONTROL_WITH_QLEARNING //methods for server running with Q Learning
-void NetworkedServer::init_shm()
+/**
+Initializes shared memory for Q_learning controllers
+**/
+void NetworkedServer::initShm()
 {   
     const int SERVER_INFO_SIZE = sizeof(double);
+    const int WINDOW_INFO_SIZE = sizeof(current_window_info_t);
 
-    const int STATE_INFO_SIZE = sizeof(state_info_t);
-
-    state_info_fd = shm_open(state_info_shm_file_name, O_CREAT | O_RDWR, 0666);
-    if(state_info_fd == -1) {
-        printf("Failed to crate shared memory for state_info: %s\n", strerror(errno));
+    current_window_info_fd = shm_open(current_window_info_shm_file_name, O_CREAT | O_RDWR, 0666);
+    if(current_window_info_fd == -1) {
+        printf("Failed to crate shared memory for current_window_info: %s\n", strerror(errno));
         exit(1);
     }
 
@@ -534,16 +452,14 @@ void NetworkedServer::init_shm()
         printf("Failed to crate shared memory for server_info: %s\n", strerror(errno));
         exit(1);
     }
-
-    //sem_fd = shm_open(sem_name,O_CREAT|O_RDWR,0666);
     
     ftruncate(server_info_fd, SERVER_INFO_SIZE);
-    ftruncate(state_info_fd,STATE_INFO_SIZE);
+    ftruncate(current_window_info_fd,WINDOW_INFO_SIZE);
 
     server_info_mem_addr = mmap(NULL, SERVER_INFO_SIZE, 
         PROT_READ | PROT_WRITE, MAP_SHARED, server_info_fd, 0);
-    state_info_mem_addr = mmap(NULL, STATE_INFO_SIZE, 
-        PROT_READ | PROT_WRITE, MAP_SHARED, state_info_fd, 0);
+    current_window_info_mem_addr = mmap(NULL, WINDOW_INFO_SIZE, 
+        PROT_READ | PROT_WRITE, MAP_SHARED, current_window_info_fd, 0);
 }
 
 
@@ -554,47 +470,47 @@ void NetworkedServer::update_mem()
 
     
     //get 95th percentile latency in ms (round up)
-    std::sort(latencies.begin(),latencies.end());
-    unsigned int len = latencies.size();
+    std::sort(window_latencies.begin(),window_latencies.end());
+    unsigned int len = window_latencies.size();
     unsigned int index = (unsigned int) ceil(len*0.95);
-    double latency_in_ms = (double)(latencies[index]/1000000.0);
+    double latency_in_ms = (double)(window_latencies[index]/1000000.0);
 
     // get 95 th percentile service time in ms (round up)
-    std::sort(services.begin(),services.end());
-    len = services.size();
+    std::sort(window_service_times.begin(),window_service_times.end());
+    len = window_service_times.size();
     index = (unsigned int) ceil(len*0.95);
-    double max_service_time_in_ms = (double)(services[index]/1000000.0);
+    double max_service_time_in_ms = (double)(window_service_times[index]/1000000.0);
 
     // get maximum of queue length when the request arrives for requests currently in the queue
     std::deque<unsigned int>::iterator max_queue_ptr = std::max_element(
-        reqQueueLengths.begin(), reqQueueLengths.end());
+        queueLengths.begin(), queueLengths.end());
     unsigned int max_QL = *max_queue_ptr; //current length of the queue
 
     
     //std::cerr << val << std::endl;
     //print for debugging
     // std::cout << "update_mem(): " << "window_id = " << current_window_id << "\n"
-    //     << "\t" << "Qlength = " << max_QL << "\n"
+    //     << "\t" << "queueLength = " << max_QL << "\n"
     //     << "\t" << "service_time = " << max_service_time_in_ms << "\n"
     //     << "\t" << "latency = " << latency_in_ms << "\n";  
 
     update_server_info(max_QL,max_service_time_in_ms);
     memcpy(server_info_mem_addr, &latency_in_ms,sizeof(double));
 
-    latencies.clear();
-    services.clear();
+    window_latencies.clear();
+    window_service_times.clear();
     starttime = getCurNs();
 }
 
 
-void NetworkedServer::update_server_info(unsigned int Qlength, float service_time)
+void NetworkedServer::update_server_info(unsigned int queueLength, float service_time)
 {
     unsigned int this_window_id = current_window_id;
     current_window_id++;
-    state_info.window_id = this_window_id;
-    state_info.Qlength = Qlength;
-    state_info.service_time = service_time;
-    memcpy(state_info_mem_addr,&state_info,sizeof(state_info_t));
+    current_window_info.window_id = this_window_id;
+    current_window_info.queueLength = queueLength;
+    current_window_info.service_time = service_time;
+    memcpy(current_window_info_mem_addr,&current_window_info,sizeof(current_window_info_t));
 }
 
 #endif
@@ -623,22 +539,12 @@ void tBenchServerInit(int nthreads) {
     
    	pthread_mutex_init(&threadCreateLock, nullptr); //initate lock for creating threads
 
-    //set core for meta-thread (current thread) 
-    //parse envrionmental variable, if given   
-    cpu_set_t metaThreadCpuSet;  
-    CPU_ZERO(&metaThreadCpuSet);
-    int meta_thread_core = getOpt<int>("META_THREAD_CORE", 7);
-    CPU_SET(meta_thread_core, &metaThreadCpuSet);
+   
     //set current thread to core according to environment variable
+    int metaThreadCore = getOpt<int>("META_THREAD_CORE", 7);  
     pthread_t thread;
     thread = pthread_self();
-    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &metaThreadCpuSet) != 0)
-    {
-        std::cerr << "pthread_setaffinity_np failed" << '\n';
-        exit(1);
-    } else {
-        std::cerr << "Sucessfully set thread " << thread << " on core " << meta_thread_core << "\n";
-    }
+    pinThreadTo(thread, metaThreadCore);
     //reporting meta-thread affinity to user
     unsigned int coreId = sched_getcpu();
     std::cout << "Confirmation: Meta thread running on core " << coreId << '\n';
@@ -683,22 +589,16 @@ void tBenchServerInit(int nthreads) {
 
 void tBenchServerThreadStart() {
     pthread_mutex_lock(&threadCreateLock);
-    tid = curTid++;
-    cpu_set_t thread_cpu_set;
-    CPU_ZERO(&thread_cpu_set);
+    tid = curTid++; //different tid for each thread
+    //parse which core to pin to from environment variables
     std::string parsing_text;
     parsing_text = "SERVER_THREAD_" + std::to_string(tid) + "_CORE";
-    int server_thread_core = getOpt<int>(parsing_text.c_str(), 2);
-    CPU_SET(server_thread_core, &thread_cpu_set);
+    int defaultCore = 6 - tid;
+    int serverThreadCore = getOpt<int>(parsing_text.c_str(), defaultCore);
     pthread_t thread;
     thread = pthread_self();
-    if (pthread_setaffinity_np(thread, sizeof(cpu_set_t), &thread_cpu_set) != 0)
-    {
-        std::cerr << "pthread_setaffinity_np failed" << '\n';
-        exit(1);
-    } else {
-        std::cerr << "Sucessfully set thread " << thread << " on core " << server_thread_core << "\n";
-    }
+    pinThreadTo(thread, serverThreadCore);
+    std::cout << "Worker thread " << tid << "pinned on core" << serverThreadCore << "\n";
     pthread_mutex_unlock(&threadCreateLock);
 }
 
@@ -715,6 +615,27 @@ size_t tBenchRecvReq(void** data) {
 
 void tBenchSendResp(const void* data, size_t size) {
     return server->sendResp(tid, data, size);
+}
+
+/**
+migrate receiver thread to the same core as meta-thread
+**/
+void tbenchMigrateReceiverThread(){
+    int metaThreadCore = getOpt<int>("META_THREAD_CORE", 7);
+    pinThreadTo(*receiverThread, metaThreadCore);
+    std::cerr << "Receiver thread migrated to " << metaThreadCore << "\n";
+}
+/**
+halt meta-thread to wait for receiver to finish
+**/
+void tBenchWaitForReceiver() {   
+    pthread_join(*receiverThread,NULL);
+    std::cerr << "Meta-thread waiting for receiver thread" << '\n';
+}
+
+void tBench_deleteReq() 
+{
+    delete global_req;
 }
 
 
@@ -743,7 +664,7 @@ void setupReceiverThread()
     //parse intended receiver thread core from environment variable
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    int receiverThreadCore = getOpt<int>("RECEIVER_THREAD_CORE", 6);
+    int receiverThreadCore = getOpt<int>("RECEIVER_THREAD_CORE", 0);
     CPU_SET(receiverThreadCore,&cpuset);
     //intialize attr object with intended thread affinity
     pthread_attr_t *attr;
@@ -756,19 +677,9 @@ void setupReceiverThread()
 }
 
 
-void tBench_deleteReq() 
-{
-    delete global_req;
-}
 
-#ifdef CONTROL_WITH_QLEARNING //implementaion of necessary functions for receiver thread
-void tBench_join() 
-{   
-    pthread_join(*receiverThread,NULL);
-}
 
-#else
-void tBench_join(){
-    //do nothing
-}
-#endif
+
+
+
+

@@ -49,10 +49,10 @@
 
 typedef struct {
     unsigned int window_id;
-    unsigned int Qlength;
+    unsigned int queueLength;
     double service_time;
-} state_info_t;
-#endif 
+} current_window_info_t;
+#endif //CONTROL_WITH_QLEARNING
 
 
 
@@ -72,27 +72,26 @@ typedef struct {
 #include "../pcm-master/utils.h"
 
 PCM * pcm;
-#endif
+#endif //PER_REQ_MONITOR
 
-class Server {
-    protected:
-        struct ReqInfo {
+class Server { 
+    protected://look at this later when we know what each field means
+
+        struct ReqInfo { //stores information of a currently processing request on the server
             uint64_t id;
             uint64_t startNs;
-            #ifdef CONTROL_WITH_QLEARNING //info for Q learning
-	       uint64_t Qlength;
-	        uint64_t Reqlen;
-            uint64_t RecNs; // time when the request is received at the server
-           #endif
+            uint64_t queueLength;
+            uint64_t recvNs; // time when the request is received at the server
+	        // uint64_t Reqlen;
 
             #ifdef PER_REQ_MONITOR
             uint64_t arrvNs;
-            #endif
+            #endif //PER_REQ_MONITOR
         };
 
-        uint64_t finishedReqs;
-        uint64_t maxReqs;
-        uint64_t warmupReqs;
+        uint64_t finishedReqs; //stores number of finished requests
+        uint64_t maxReqs; //stores maximum numbre of requests to process
+        uint64_t warmupReqs; //stores number of warmup requests specified by the user
 
         std::vector<ReqInfo> reqInfo; // Request info for each thread 
         
@@ -120,6 +119,7 @@ class IntegratedServer : public Server, public Client {
 
 class NetworkedServer : public Server {
     private:
+        //locks for send and receive
         pthread_mutex_t sendLock;
         pthread_mutex_t recvLock;
         #ifdef PER_REQ_MONITOR
@@ -134,7 +134,7 @@ class NetworkedServer : public Server {
         #ifdef PER_REQ_MONITOR
         std::vector<CoreCounterState> cstates;
         std::vector<SocketCounterState> sktstates;
-        #endif
+        #endif //PER_REQ_MONITOR
         size_t recvClientHead; // The idx of the client at the 'head' of the 
                                // receive queue. We start with this idx and go
                                // down the list of eligible fds to receive from.
@@ -148,28 +148,29 @@ class NetworkedServer : public Server {
         bool checkRecv(int recvd, int expected, int fd);
 
         #ifdef CONTROL_WITH_QLEARNING //variables and constants necessary for Q Learning
+        //major refactor/rename needed 
         int server_info_fd;
         int sem_fd;
-        int state_info_fd;
+        int current_window_info_fd;
         int runLength;
         sem_t *sem;
         void *server_info_mem_addr;
-        void *state_info_mem_addr;
+        void *current_window_info_mem_addr;
         int starttime; //the start time of each window
         unsigned int current_window_id; 
-        state_info_t state_info;
+        current_window_info_t current_window_info;
 
         const char *server_info_shm_file_name = "server_info";
-        const char *state_info_shm_file_name = "state_info";
+        const char *current_window_info_shm_file_name = "current_window_info";
         //const char *sem_name = "sem";
         
-        std::queue<Request*> recvReq_Queue; // data structure for holding unprocessed requests
-	    std::queue<int> fd_Queue; //keep record of fd to return for request
-	    std::deque<unsigned int> Qlen_Queue; //keep record of queue length when request is received
-        std::queue<uint64_t> rectime_Queue; // keep record of when the request is received
+        std::queue<Request*> pendingReqs; // data structure for holding unprocessed requests
+	    std::queue<int> fds; //keep record of fd to return for request
+	    std::deque<unsigned int> queueLengths; //keep record of queue length when request is received
+        std::queue<uint64_t> reqReceivingTimes; // keep record of when the request is received
         //variables for every window
-        std::vector<uint64_t> latencies; //latencies in current window
-        std::vector<uint64_t> services;  //service times in current window
+        std::vector<uint64_t> window_latencies; //window_latencies in current window
+        std::vector<uint64_t> window_service_times;  //service times in current window
         #endif
 
     public:
@@ -186,9 +187,9 @@ class NetworkedServer : public Server {
         int recvReq_Q();
         //for shared memory
 
-        void init_shm();
+        void initShm;
         void update_mem();
-        void update_server_info(unsigned int Qlength, float service_time);
+        void update_server_info(unsigned int queueLength, float service_time);
         #endif
 };
 
