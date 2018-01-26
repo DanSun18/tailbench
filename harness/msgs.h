@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define PER_REQ_MONITOR //uncomment to enable per request monitoring
+// #define PER_REQ_MONITOR //uncomment to enable per request monitoring
 // #define CONTROL_WITH_QLEARNING //uncomment to run with Q-Learning Controller
 
 
