@@ -131,12 +131,19 @@ class NetworkedServer : public Server {
         #ifdef PER_REQ_MONITOR
         pthread_mutex_t pcmLock;
         #endif //PER_REQ_MONITOR
-        
+
         Request *reqbuf; // One for each server thread
 
         std::vector<int> clientFds;
         std::vector<int> activeFds; // Currently active client fds for 
                                     // each thread
+        
+        //queues to hold information for pending requests
+        std::queue<Request*> pendingReqs; // data structure for holding unprocessed requests
+        std::queue<int> fds; //keep record of fd to return for request
+        std::deque<unsigned int> queueLengths; //keep record of queue length when request is received
+        std::queue<uint64_t> reqReceivingTimes; // keep record of when the request is received
+
         //state1 stores counter state when start processing request, socket 2 store when finishing
         #ifdef PER_REQ_MONITOR
         std::vector<CoreCounterState> cstates;
@@ -154,6 +161,8 @@ class NetworkedServer : public Server {
         void removeClient(int fd);
         bool checkRecv(int recvd, int expected, int fd);
 
+        
+
         #ifdef CONTROL_WITH_QLEARNING //variables and constants necessary for Q Learning
         //major refactor/rename needed 
         int server_info_fd;
@@ -170,22 +179,17 @@ class NetworkedServer : public Server {
         const char *server_info_shm_file_name = "server_info";
         const char *current_window_info_shm_file_name = "current_window_info";
         //const char *sem_name = "sem";
-        
-        std::queue<Request*> pendingReqs; // data structure for holding unprocessed requests
-	    std::queue<int> fds; //keep record of fd to return for request
-	    std::deque<unsigned int> queueLengths; //keep record of queue length when request is received
-        std::queue<uint64_t> reqReceivingTimes; // keep record of when the request is received
         //variables for every window
         std::vector<uint64_t> window_latencies; //window_latencies in current window
         std::vector<uint64_t> window_service_times;  //service times in current window
-        #endif
+        #endif //CONTROL_WITH_QLEARNING
 
     public:
 
         NetworkedServer(int nthreads, std::string ip, int port, int nclients);
         ~NetworkedServer();
 
-        int putReqInQueue();
+        bool putReqInQueue();
         size_t recvReq(int id, void** data);
         void sendResp(int id, const void* data, size_t size);
         void finish();
