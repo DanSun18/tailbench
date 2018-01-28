@@ -259,14 +259,14 @@ void Client::dumpAllStats() {
 	}
     std::ofstream out("lats.bin", std::ios::out | std::ios::binary);
     //write header
-    out << 'id' << ' ';
-    out << 'generation_time' << ' ';
-    out << 'queue_time' << ' ';
-    out << 'service_time' << ' ';
-    out << 'latency' << ' ';
-    out << 'service_start_time' << ' ';
-    out << 'queue_length';
-    out << '\n'
+    out << "id" << ' ';
+    out << "generation_time" << ' ';
+    out << "queue_time" << ' ';
+    out << "service_time" << ' ';
+    out << "latency" << ' ';
+    out << "service_start_time" << ' ';
+    out << "queue_length";
+    out << '\n';
     //write data
     int reqs = recvIds.size();
     for (int r = 0; r < reqs; ++r) {  
