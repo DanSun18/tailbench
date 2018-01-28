@@ -117,7 +117,7 @@ void Client::finiReq(Response* resp) {
         assert(sjrn >= resp->svcNs);
         uint64_t qtime = sjrn - resp->svcNs;
 
-        queueTimes.push_back(qtime);
+        waitingTimes.push_back(qtime);
         svcTimes.push_back(resp->svcNs);
         sjrnTimes.push_back(sjrn);
     }
@@ -131,7 +131,7 @@ void Client::_startRoi() {
     assert(status == WARMUP);
     status = ROI;
 
-    queueTimes.clear();
+    waitingTimes.clear();
     svcTimes.clear();
     sjrnTimes.clear();
 }
@@ -147,13 +147,13 @@ void Client::dumpStats() {
     int reqs = sjrnTimes.size();
 
     for (int r = 0; r < reqs; ++r) {
-       // out.write(reinterpret_cast<const char*>(&queueTimes[r]), 
-       //             sizeof(queueTimes[r]));
+       // out.write(reinterpret_cast<const char*>(&waitingTimes[r]), 
+       //             sizeof(waitingTimes[r]));
        // out.write(reinterpret_cast<const char*>(&svcTimes[r]), 
         //            sizeof(svcTimes[r]));
        // out.write(reinterpret_cast<const char*>(&sjrnTimes[r]), 
        //             sizeof(sjrnTimes[r]));	
-	out<<queueTimes[r];
+	out<<waitingTimes[r];
 	out<<' ';
 	out<<svcTimes[r];
         out<<' ';

@@ -18,7 +18,6 @@
 #define __CLIENT_H
 
 #include "msgs.h"
-#include "msgs.h"
 #include "dist.h"
 
 #include <pthread.h>
@@ -71,7 +70,7 @@ class Client {
     protected:
         ClientStatus status;
 
-        int nthreads;
+        int nthreads; //number of threads
         pthread_mutex_t lock;
         pthread_barrier_t barrier;
 
@@ -86,12 +85,10 @@ class Client {
 
 
         std::vector<uint64_t> svcTimes; //actual time used to process request in server
-        std::vector<uint64_t> queueTimes;
+        std::vector<uint64_t> waitingTimes;
         std::vector<uint64_t> sjrnTimes;
 	    std::vector<uint64_t> startTimes; //start time of service
-        #ifdef CONTROL_WITH_QLEARNING //store data for q learning to analyze
-        std::vector<uint64_t> QueueLens;
-        #endif
+        std::vector<uint64_t> queueLengths;
         std::vector<uint64_t> recvIds;
         std::vector<uint64_t> genTimes;
 
@@ -107,11 +104,12 @@ class Client {
         std::vector<unsigned int> coreIds;
         std::vector<uint64_t> L3Occupancies;
         #endif
+
         //choose not to use these anymore even if using dynamic QPS
         //because generation time is recorded
         
  //        std::queue< std::vector<uint64_t> > _svcTimes;
- //        std::queue< std::vector<uint64_t> > _queueTimes;
+ //        std::queue< std::vector<uint64_t> > _waitingTimes;
  //        std::queue< std::vector<uint64_t> > _sjrnTimes;
 	// std::queue<std::vector<uint64_t> > _startTimes;
  //        std::queue< std::vector<uint64_t> > _recvIds;

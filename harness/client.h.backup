@@ -47,7 +47,7 @@ class Client {
         std::unordered_map<uint64_t, Request*> inFlightReqs;
 
         std::vector<uint64_t> svcTimes;
-        std::vector<uint64_t> queueTimes;
+        std::vector<uint64_t> waitingTimes;
         std::vector<uint64_t> sjrnTimes;
 
         void _startRoi();
