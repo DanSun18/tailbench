@@ -107,7 +107,7 @@ project : default-build
   ;
 
 project : requirements 
-  #<threading>multi:<define>WITH_THREADS
+  <threading>multi:<define>WITH_THREADS
   <threading>multi:<library>boost_thread
   <define>_FILE_OFFSET_BITS=64 <define>_LARGE_FILES
   $(requirements)

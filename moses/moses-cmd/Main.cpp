@@ -744,9 +744,9 @@ int main(int argc, char** argv)
     // }
     // std::cout << "meta_thread_core pinned to core " << meta_thread_core << '\n';
 
-// #ifdef WITH_THREADS
+#ifdef WITH_THREADS
     ThreadPool pool(staticData.ThreadCount());
-// #endif
+#endif
 
     size_t lineCount = staticData.GetStartTranslationId();
     InputType* source = NULL;
@@ -774,21 +774,21 @@ int main(int argc, char** argv)
         staticData.GetOutputSearchGraphSLF(),
         staticData.GetOutputSearchGraphHypergraph());
         // execute task
-// #ifdef WITH_THREADS
+#ifdef WITH_THREADS
       pool.Submit(task);
-// #else
-//       task->Run();
-//       delete task;
-// #endif
+#else
+      task->Run();
+      delete task;
+#endif
       source = NULL; //make sure it doesn't get deleted
       ++lineCount;
     }
 
     tbenchMigrateReceiverThread();
   // we are done, finishing up
-// #ifdef WITH_THREADS
+#ifdef WITH_THREADS
     pool.Stop(true); //process remaining jobs
-// #endif
+#endif
     tBenchWaitForReceiver();
     delete ioWrapper;
 
