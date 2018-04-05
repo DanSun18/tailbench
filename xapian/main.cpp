@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
     
     Server::run(servers[numServers - 1]);
     
-    tBench_join();
+    tBenchWaitForReceiver();
     if (numServers > 1) {
         for (unsigned i = 0; i < numServers - 1; i++)
             pthread_join(threads[i], NULL);
