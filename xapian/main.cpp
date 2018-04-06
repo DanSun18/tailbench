@@ -75,20 +75,20 @@ int main(int argc, char* argv[]) {
     pthread_t* threads = NULL;
     if (numServers > 0) {
         threads = new pthread_t [numServers];
-        for (unsigned i = 0; i < numServers - 1; i++) {
+        for (unsigned i = 0; i < numServers; i++) {
             pthread_create(&threads[i], NULL, Server::run, servers[i]);
         }
     }
     
     // Server::run(servers[numServers - 1]);
 
-
-    std::cerr << "Calling tBenchWaitForReceiver() in xapian" << '\n';
+    tbenchMigrateReceiverThread();
+    std::cerr << "Finished migrating receiver thread in xapian" << '\n';
     tBenchWaitForReceiver();
     std::cerr << "Finished waiting for receiver in xapian" << '\n';
 
     if (numServers > 0) {
-        for (unsigned i = 0; i < numServers - 1; i++)
+        for (unsigned i = 0; i < numServers; i++)
             pthread_join(threads[i], NULL);
     }
     
