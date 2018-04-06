@@ -87,10 +87,10 @@ int main(int argc, char* argv[]) {
     tBenchWaitForReceiver();
     std::cerr << "Finished waiting for receiver in xapian" << '\n';
 
-    if (numServers > 0) {
-        for (unsigned i = 0; i < numServers; i++)
-            pthread_join(threads[i], NULL);
-    }
+    // if (numServers > 0) {
+    //     for (unsigned i = 0; i < numServers; i++)
+    //         pthread_join(threads[i], NULL);
+    // }
     
     std::cerr << "Xapian calling tBenchServerFinish()" << '\n';
     tBenchServerFinish();
