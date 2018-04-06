@@ -73,19 +73,21 @@ int main(int argc, char* argv[]) {
         servers[i] = new Server(i, dbPath);
 
     pthread_t* threads = NULL;
-    if (numServers > 1) {
-        threads = new pthread_t [numServers - 1];
+    if (numServers > 0) {
+        threads = new pthread_t [numServers];
         for (unsigned i = 0; i < numServers - 1; i++) {
             pthread_create(&threads[i], NULL, Server::run, servers[i]);
         }
     }
     
-    Server::run(servers[numServers - 1]);
-    
+    // Server::run(servers[numServers - 1]);
+
+
+    std::cerr << "Calling tBenchWaitForReceiver() in xapian" << '\n';
     tBenchWaitForReceiver();
     std::cerr << "Finished waiting for receiver in xapian" << '\n';
 
-    if (numServers > 1) {
+    if (numServers > 0) {
         for (unsigned i = 0; i < numServers - 1; i++)
             pthread_join(threads[i], NULL);
     }

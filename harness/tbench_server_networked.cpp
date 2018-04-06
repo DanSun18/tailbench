@@ -203,7 +203,7 @@ bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
     if (recvd == 0) { // Client exited
         std::cerr << "Client left, removing" << std::endl;
         removeClient(fd);
-        success = false;
+        return false;
     } else if (recvd == -1) {
         std::cerr << "recv() failed: " << strerror(errno) \
             << ". Exiting" << std::endl;
