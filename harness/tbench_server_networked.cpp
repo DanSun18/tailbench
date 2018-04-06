@@ -195,6 +195,7 @@ NetworkedServer::~NetworkedServer() {
 void NetworkedServer::removeClient(int fd) {
     auto it = std::find(clientFds.begin(), clientFds.end(), fd);
     clientFds.erase(it);
+    std::cout << "Client successfully removed, remaining: " << clientFds.size() << '\n';
 }
 
 bool NetworkedServer::checkRecv(int recvd, int expected, int fd) {
@@ -529,7 +530,7 @@ void NetworkedServer::update_server_info(unsigned int queueLength, float service
  * API
  *******************************************************************************/
 void tBenchServerInit(int nthreads) {
-    
+    std::cout << "Entered tBenchServerInit" << '\n';
    	pthread_mutex_init(&threadCreateLock, nullptr); //initate lock for creating threads
 
    

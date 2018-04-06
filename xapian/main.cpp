@@ -83,14 +83,16 @@ int main(int argc, char* argv[]) {
     Server::run(servers[numServers - 1]);
     
     tBenchWaitForReceiver();
+    std::cerr << "Finished waiting for receiver in xapian" << '\n';
+
     if (numServers > 1) {
         for (unsigned i = 0; i < numServers - 1; i++)
             pthread_join(threads[i], NULL);
     }
     
-    
+    std::cerr << "Xapian calling tBenchServerFinish()" << '\n';
     tBenchServerFinish();
-
+    std::cerr << "Xapian finished calling tBenchServerFinish()" << '\n';
     for (unsigned i = 0; i < numServers; i++)
         delete servers[i];
 
